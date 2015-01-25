@@ -236,10 +236,10 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   *lngmn = time_buffer[3];
   *srtmn = time_buffer[4];
   
-  text_layer_set_text(text_hours_layer, srthr); // should be buffer1
-  text_layer_set_text(text_minutes_layer, lngmn); // should be buffer2
-  text_layer_set_text(text_long_hours_layer, lnghr); // &time_buffer[3]);
-  text_layer_set_text(text_short_minutes_layer, srtmn); // &time_buffer[4]
+  text_layer_set_text(text_hours_layer, srthr);
+  text_layer_set_text(text_minutes_layer, lngmn);
+  text_layer_set_text(text_long_hours_layer, lnghr);
+  text_layer_set_text(text_short_minutes_layer, srtmn);
   
 }
 
@@ -258,7 +258,7 @@ void window_load (Window *my_window) {
   text_layer_set_text_alignment(text_hours_layer, GTextAlignmentRight);
   text_layer_set_font(text_hours_layer, HBH_font);
   
-  text_minutes_layer = text_layer_create(GRect(77, 20, 66, 140));  // should this 72 be 66??
+  text_minutes_layer = text_layer_create(GRect(77, 20, 66, 140));
   text_layer_set_background_color(text_minutes_layer, GColorClear);
   text_layer_set_text_color(text_minutes_layer, GColorWhite);
   text_layer_set_text_alignment(text_minutes_layer, GTextAlignmentLeft);
@@ -271,13 +271,13 @@ void window_load (Window *my_window) {
   text_layer_set_font(text_colon_layer, HBH_font);
   text_layer_set_text(text_colon_layer, ":");
   
-  text_long_hours_layer = text_layer_create(GRect(long_hours_offset, 20, 34, 140)); // these numbers good???
+  text_long_hours_layer = text_layer_create(GRect(long_hours_offset, 20, 34, 140));
   text_layer_set_background_color(text_long_hours_layer, GColorClear);
   text_layer_set_text_color(text_long_hours_layer, GColorWhite);
   text_layer_set_text_alignment(text_long_hours_layer, GTextAlignmentRight);
   text_layer_set_font(text_long_hours_layer, HBH_font);
   
-  text_short_minutes_layer = text_layer_create(GRect(short_minutes_offset, 20, 33, 140)); // should this 36 be 33?
+  text_short_minutes_layer = text_layer_create(GRect(short_minutes_offset, 20, 33, 140));
   text_layer_set_background_color(text_short_minutes_layer, GColorClear);
   text_layer_set_text_color(text_short_minutes_layer, GColorWhite);
   text_layer_set_text_alignment(text_short_minutes_layer, GTextAlignmentLeft);
