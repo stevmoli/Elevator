@@ -156,12 +156,10 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
   
   // Animating digit adjustment when a one appears in the hours ones place
-  if (clock_is_24h_style() == true) {
-    if (((hours == 1) || (hours == 11)) && (minutes == 0) && (seconds == 0)) {
+  if (((hours == 1) || (hours == 11)) && (minutes == 0) && (seconds == 0)) {
       GRect digit_start = GRect (11, 20, 34, 140);
       GRect digit_finish = GRect (long_hours_offset, 20, 34, 140);
       animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 400, 1);    
-    }
   }
   
   if (clock_is_24h_style() == false) { // dealing with 11 PM
@@ -185,8 +183,8 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 400, 1);
   }
   
-  if (clock_is_24h_style() == false) { // dealiing with 11 PM switching to midnight
-    if ((hours == 0) && (minutes == 0) && (seconds == 0)) {
+  if (clock_is_24h_style() == false) { // dealiing with 11 PM switching to midnight and 1 PM switching to 2 PM
+    if (((hours == 0) || (hours == 14)) && (minutes == 0) && (seconds == 0)) {
     GRect digit_start = GRect (22, 20, 34, 140);
     GRect digit_finish = GRect (long_hours_offset, 20, 34, 140);
     animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 400, 1);
@@ -333,4 +331,3 @@ int main(void) {
   app_event_loop();
   handle_deinit();
 }
-
