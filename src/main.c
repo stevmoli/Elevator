@@ -18,14 +18,11 @@ char srthr[] = "0";
 char lngmn[] = "0";
 char srtmn[] = "0";
 
-
 int long_hours_offset = 11;
 int short_hours_offset = 10;
 int short_minutes_offset = 99;
 
 int format_fix = 1;
-
-
 
 // destroying animations when stopped
 void on_animation_stopped(Animation *anim, bool finished, void *context) {
@@ -115,7 +112,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 1850, 1);
     }
   } else { // now we will deal with the 12hr case
-    if ((seconds == 58) && (minutes == 59) && ((hours == 9) || (hours == 12) || (hours == 0))) {
+    if ((seconds == 58) && (minutes == 59) && ((hours == 9) || (hours == 12) || (hours == 21) || (hours == 0))) {
       GRect digit_start = GRect (long_hours_offset, 20, 34, 140);
       GRect digit_finish = GRect (long_hours_offset, -134, 34, 140);
       animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 1850, 1);
@@ -148,7 +145,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 800, 1);
     }
   } else { // 12hr time
-    if (((seconds == 0) && (minutes == 0)) && ((hours == 10) || (hours == 13) || (hours == 1))) {
+    if (((seconds == 0) && (minutes == 0)) && ((hours == 10) || (hours == 13) || (hours == 22) || (hours == 1))) {
       GRect digit_start = GRect (long_hours_offset, 170, 34, 140);
       GRect digit_finish = GRect (long_hours_offset, 20, 34, 140);
       animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 800, 1);
@@ -238,7 +235,6 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   text_layer_set_text(text_minutes_layer, lngmn);
   text_layer_set_text(text_long_hours_layer, lnghr);
   text_layer_set_text(text_short_minutes_layer, srtmn);
-  
 }
 
 // WINDOW LIFE
@@ -297,7 +293,6 @@ void window_load (Window *my_window) {
   temp = time(NULL);
   t = localtime(&temp);
   tick_handler(t, MINUTE_UNIT);
-
 }
 
 void window_unload (Window *my_window) {
