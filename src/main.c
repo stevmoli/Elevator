@@ -3,6 +3,7 @@
 #include <string.h>
 
 Window *my_window;
+GBitmap *zero, *one, *two, *three, *four, *five, *six, *seven, *eight, *nine;
 TextLayer *text_hours_layer;
 TextLayer *text_minutes_layer;
 TextLayer *text_colon_layer;
@@ -13,10 +14,14 @@ TextLayer *background_layer;
 
 static char time_buffer[] = "00:00";
 
+BitmapLayer *lnghr, *srthr, *lngmn, *srtmn;
+
+/*
 char lnghr[] = "0";
 char srthr[] = "0";
 char lngmn[] = "0";
 char srtmn[] = "0";
+*/
 
 int long_hours_offset = 11;
 int short_hours_offset = 10;
@@ -225,7 +230,8 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
   
   // DONE with animations
-  
+
+  /*
   *lnghr = time_buffer[0];
   *srthr = time_buffer[1];
   *lngmn = time_buffer[3];
@@ -235,6 +241,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   text_layer_set_text(text_minutes_layer, lngmn);
   text_layer_set_text(text_long_hours_layer, lnghr);
   text_layer_set_text(text_short_minutes_layer, srtmn);
+  */
 }
 
 // WINDOW LIFE
@@ -242,6 +249,24 @@ void window_load (Window *my_window) {
   // load background
   background_layer = text_layer_create(GRect(0, 0, 144, 168));
   text_layer_set_background_color(background_layer, GColorBlack);
+  
+  // loading the digit images
+  zero = gbitmap_create_with_resource(RESOURCE_ID_N_0);
+  one = gbitmap_create_with_resource(RESOURCE_ID_N_1);
+  two = gbitmap_create_with_resource(RESOURCE_ID_N_2);
+  three = gbitmap_create_with_resource(RESOURCE_ID_N_3);
+  four = gbitmap_create_with_resource(RESOURCE_ID_N_4);
+  five = gbitmap_create_with_resource(RESOURCE_ID_N_5);
+  six = gbitmap_create_with_resource(RESOURCE_ID_N_6);
+  seven = gbitmap_create_with_resource(RESOURCE_ID_N_7);
+  eight = gbitmap_create_with_resource(RESOURCE_ID_N_8);
+  nine = gbitmap_create_with_resource(RESOURCE_ID_N_9);
+  
+  // creating the gbitmap layers
+  lnghr = bitmap_layer_create(GRect(0, 8, 26, 149));
+  srthr = bitmap_layer_create(GRect(32, 8, 26, 149));
+  lngmn = bitmap_layer_create(GRect(0, 0, 26, 149));
+  srtmn = bitmap_layer_create(GRect(0, 0, 26, 149));
   
   // loading the time
   HBH_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_HBH_120));
@@ -285,6 +310,16 @@ void window_load (Window *my_window) {
   layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(text_long_hours_layer));
   layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(text_short_minutes_layer));
   layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(text_colon_layer));
+  
+  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(lnghr));
+  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(srthr));
+  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(lngmn));
+  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(srtmn));
+  
+  bitmap_layer_set_bitmap(lnghr, eight); // delete these tests!!!!!
+  bitmap_layer_set_bitmap(srthr, eight); // delete these tests!!!!!
+  bitmap_layer_set_bitmap(lngmn, eight); // delete these tests!!!!!
+  bitmap_layer_set_bitmap(srtmn, eight); // delete these tests!!!!!
   
   
   // preventing face from starting blank
