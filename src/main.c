@@ -16,12 +16,10 @@ static char time_buffer[] = "00:00";
 
 BitmapLayer *lnghr, *srthr, *lngmn, *srtmn;
 
-/*
-char lnghr[] = "0";
-char srthr[] = "0";
-char lngmn[] = "0";
-char srtmn[] = "0";
-*/
+char lnghr_string[] = "0";
+char srthr_string[] = "0";
+char lngmn_string[] = "0";
+char srtmn_string[] = "0";
 
 int long_hours_offset = 11;
 int short_hours_offset = 10;
@@ -232,16 +230,19 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // DONE with animations
 
   /*
-  *lnghr = time_buffer[0];
-  *srthr = time_buffer[1];
-  *lngmn = time_buffer[3];
-  *srtmn = time_buffer[4];
+  *lnghr_string = time_buffer[0];
+  *srthr_string = time_buffer[1];
+  *lngmn_string = time_buffer[3];
+  *srtmn_string = time_buffer[4];
   
   text_layer_set_text(text_hours_layer, srthr);
   text_layer_set_text(text_minutes_layer, lngmn);
   text_layer_set_text(text_long_hours_layer, lnghr);
   text_layer_set_text(text_short_minutes_layer, srtmn);
   */
+  
+  // NEXT TO DO: Uncomment the above part, make an array of pointers to the different digit images, and a method that selects the corresponding digit image when a digit in the time string changes
+  
 }
 
 // WINDOW LIFE
@@ -263,10 +264,10 @@ void window_load (Window *my_window) {
   nine = gbitmap_create_with_resource(RESOURCE_ID_N_9);
   
   // creating the gbitmap layers
-  lnghr = bitmap_layer_create(GRect(0, 8, 26, 149));
-  srthr = bitmap_layer_create(GRect(32, 8, 26, 149));
-  lngmn = bitmap_layer_create(GRect(0, 0, 26, 149));
-  srtmn = bitmap_layer_create(GRect(0, 0, 26, 149));
+  lnghr = bitmap_layer_create(GRect(4, 8, 26, 149));
+  srthr = bitmap_layer_create(GRect(36, 8, 26, 149));
+  lngmn = bitmap_layer_create(GRect(81, 8, 26, 149)); // get real values
+  srtmn = bitmap_layer_create(GRect(113, 8, 26, 149)); // get real values
   
   // loading the time
   HBH_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_HBH_120));
@@ -283,7 +284,7 @@ void window_load (Window *my_window) {
   text_layer_set_text_alignment(text_minutes_layer, GTextAlignmentLeft);
   text_layer_set_font(text_minutes_layer, HBH_font);
   
-  text_colon_layer = text_layer_create(GRect(0, 10, 144, 120));
+  text_colon_layer = text_layer_create(GRect(1, 10, 143, 120));
   text_layer_set_background_color(text_colon_layer, GColorClear);
   text_layer_set_text_color(text_colon_layer, GColorWhite);
   text_layer_set_text_alignment(text_colon_layer, GTextAlignmentCenter);
@@ -317,9 +318,9 @@ void window_load (Window *my_window) {
   layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(srtmn));
   
   bitmap_layer_set_bitmap(lnghr, eight); // delete these tests!!!!!
-  bitmap_layer_set_bitmap(srthr, eight); // delete these tests!!!!!
-  bitmap_layer_set_bitmap(lngmn, eight); // delete these tests!!!!!
-  bitmap_layer_set_bitmap(srtmn, eight); // delete these tests!!!!!
+  bitmap_layer_set_bitmap(srthr, nine); // delete these tests!!!!!
+  bitmap_layer_set_bitmap(lngmn, four); // delete these tests!!!!!
+  bitmap_layer_set_bitmap(srtmn, five); // delete these tests!!!!!
   
   
   // preventing face from starting blank
