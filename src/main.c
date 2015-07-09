@@ -27,6 +27,35 @@ int short_minutes_offset = 99;
 
 int format_fix = 1;
 
+// Updates BitmapLayers with the correct digit images, based on the current time (digits passed in as digit_string)
+void image_update(char digit_string[], BitmapLayer *image){
+  int digit;
+  digit = atoi(digit_string);
+  if (digit == 0){
+    bitmap_layer_set_bitmap(image, zero);
+  } else if (digit == 1){
+    bitmap_layer_set_bitmap(image, one);
+  } else if (digit == 2){
+    bitmap_layer_set_bitmap(image, two);
+  } else if (digit == 3){
+    bitmap_layer_set_bitmap(image, three);
+  } else if (digit == 4){
+    bitmap_layer_set_bitmap(image, four);
+  } else if (digit == 5){
+    bitmap_layer_set_bitmap(image, five);
+  } else if (digit == 6){
+    bitmap_layer_set_bitmap(image, six);
+  } else if (digit == 7){
+    bitmap_layer_set_bitmap(image, seven);
+  } else if (digit == 8){
+    bitmap_layer_set_bitmap(image, eight);
+  } else if (digit == 9){
+    bitmap_layer_set_bitmap(image, nine);
+  } else {                                      // test case, to be removed
+    bitmap_layer_set_bitmap(image, nine);
+  }
+}
+
 // destroying animations when stopped
 void on_animation_stopped(Animation *anim, bool finished, void *context) {
   property_animation_destroy((PropertyAnimation*) anim);
@@ -229,21 +258,20 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
   // DONE with animations
 
-  /*
+  // Getting current digits as strings
   *lnghr_string = time_buffer[0];
   *srthr_string = time_buffer[1];
   *lngmn_string = time_buffer[3];
   *srtmn_string = time_buffer[4];
   
-  text_layer_set_text(text_hours_layer, srthr);
-  text_layer_set_text(text_minutes_layer, lngmn);
-  text_layer_set_text(text_long_hours_layer, lnghr);
-  text_layer_set_text(text_short_minutes_layer, srtmn);
-  */
+  // image layers updated with image_update method
   
-  // NEXT TO DO: Uncomment the above part, make an array of pointers to the different digit images, and a method that selects the corresponding digit image when a digit in the time string changes
-  
-}
+  image_update(lnghr_string, lnghr);
+  image_update(srthr_string, srthr);
+  image_update(lngmn_string, lngmn);
+  image_update(srtmn_string, srtmn);
+
+} // end of tick handler
 
 // WINDOW LIFE
 void window_load (Window *my_window) {
