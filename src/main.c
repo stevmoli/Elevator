@@ -23,7 +23,8 @@ char srtmn_string[] = "0";
 
 int long_hours_offset = 11;
 int short_hours_offset = 10;
-int short_minutes_offset = 99;
+int long_minutes_offset = 81;
+int short_minutes_offset = 113;  // GOOD
 
 int format_fix = 1;
 
@@ -111,24 +112,27 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
   
   if (strncmp("1", &time_buffer[3], 1) == 0) { // handles ones place of minutes
-    short_minutes_offset = 88;
+    short_minutes_offset = 105;    // GOOD FOR NOW, BUT TENS PLACE WILL BE MOVED EVENTUALLY AND THIS NUMBER WILL GET SMALLER
   } else {
-    short_minutes_offset = 99;
+    short_minutes_offset = 113;     //GOOD
   }
+  
+  // NEED TO ACCOUNT FOR A 1 IN THE MINUTES ONES PLACE!!!!!
+  
   
   // Triggering the animations:
   
   //PRE DIGIT CHANGE
   if (seconds == 58) {  // ones digit of minutes falls before changing
-    GRect digit_start = GRect(short_minutes_offset, 20, 33, 140);
-    GRect digit_finish = GRect(short_minutes_offset, 170, 33, 140);
-    animate_digit_layer(text_layer_get_layer(text_short_minutes_layer), &digit_start, &digit_finish, 1850, 1);
+    GRect digit_start = GRect(short_minutes_offset, 8, 26, 149);  // GOOD
+    GRect digit_finish = GRect(short_minutes_offset, 170, 26, 149);
+    animate_digit_layer(bitmap_layer_get_layer(srtmn), &digit_start, &digit_finish, 1850, 1);
   }
   
   if ((seconds == 58) && (strncmp("9", &time_buffer[4], 1) == 0)) {  // tens digit of minutes rises before changing
-    GRect digit_start = GRect(77, 20, 66, 140);
-    GRect digit_finish = GRect(77, -134, 66, 140);
-    animate_digit_layer(text_layer_get_layer(text_minutes_layer), &digit_start, &digit_finish, 1850, 1);
+    GRect digit_start = GRect(long_minutes_offset, 8, 26, 149);
+    GRect digit_finish = GRect(long_minutes_offset, -134, 26, 149);
+    animate_digit_layer(bitmap_layer_get_layer(lngmn), &digit_start, &digit_finish, 1850, 1);
   }
   
   if ((seconds == 58) && (minutes == 59)) {  // ones digit of hours falls before changing
@@ -153,15 +157,15 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
   // POST DIGIT CHANGE
   if (seconds == 0) {  // ones digit of minutes falls after changing
-    GRect digit_start = GRect(short_minutes_offset, -134, 33, 140);
-    GRect digit_finish = GRect(short_minutes_offset, 20, 33, 140);
-    animate_digit_layer(text_layer_get_layer(text_short_minutes_layer), &digit_start, &digit_finish, 800, 1);
+    GRect digit_start = GRect(short_minutes_offset, -134, 26, 149);  // GOOD
+    GRect digit_finish = GRect(short_minutes_offset, 8, 26, 149);
+    animate_digit_layer(bitmap_layer_get_layer(srtmn), &digit_start, &digit_finish, 800, 1);
   }
   
   if ((seconds == 0) && (strncmp("0", &time_buffer[4], 1) == 0)) {  // tens digit of minutes rises after changing
-    GRect digit_start = GRect(77, 170, 66, 140);
-    GRect digit_finish = GRect(77, 20, 66, 140);
-    animate_digit_layer(text_layer_get_layer(text_minutes_layer), &digit_start, &digit_finish, 800, 100);
+    GRect digit_start = GRect(long_minutes_offset, 170, 26, 149);
+    GRect digit_finish = GRect(long_minutes_offset, 8, 26, 149);
+    animate_digit_layer(bitmap_layer_get_layer(lngmn), &digit_start, &digit_finish, 800, 100);
   }
   
   if ((seconds == 0) && (minutes == 0)) {  // ones digit of hours falls after changing
@@ -345,10 +349,10 @@ void window_load (Window *my_window) {
   layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(lngmn));
   layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(srtmn));
   
-  bitmap_layer_set_bitmap(lnghr, eight); // delete these tests!!!!!
-  bitmap_layer_set_bitmap(srthr, nine); // delete these tests!!!!!
-  bitmap_layer_set_bitmap(lngmn, four); // delete these tests!!!!!
-  bitmap_layer_set_bitmap(srtmn, five); // delete these tests!!!!!
+  //bitmap_layer_set_bitmap(lnghr, eight); // delete these tests!!!!!
+  //bitmap_layer_set_bitmap(srthr, nine); // delete these tests!!!!!
+  //bitmap_layer_set_bitmap(lngmn, four); // delete these tests!!!!!
+  //bitmap_layer_set_bitmap(srtmn, five); // delete these tests!!!!!
   
   
   // preventing face from starting blank
