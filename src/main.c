@@ -111,11 +111,25 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     long_hours_offset = 10;
   }
   
-  if (strncmp("1", &time_buffer[3], 1) == 0) { // handles ones place of minutes
-    short_minutes_offset = 105;    // GOOD FOR NOW, BUT TENS PLACE WILL BE MOVED EVENTUALLY AND THIS NUMBER WILL GET SMALLER
+  if (strncmp("1", &time_buffer[2], 1) == 0) { // handles tens place of minutes
+    long_minutes_offset = 71; 
+      if (strncmp("1", &time_buffer[3], 1) == 0) { // handles ones place of minutes
+        short_minutes_offset = long_minutes_offset + 28;
+      } else 
+        short_minutes_offset = long_minutes_offset + 24;  // GOOD
   } else {
-    short_minutes_offset = 113;     //GOOD
+    long_minutes_offset = 81;
+      if (strncmp("1", &time_buffer[3], 1) == 0) { // handles ones place of minutes
+        short_minutes_offset = 105;
+      }
   }
+  
+  //if (strncmp("1", &time_buffer[3], 1) == 0) { // handles ones place of minutes
+    //short_minutes_offset = 105;    // GOOD FOR NOW, BUT TENS PLACE WILL BE MOVED EVENTUALLY AND THIS NUMBER WILL GET SMALLER
+    //short_minutes_offset = long_minutes_offset + 24;
+  //} else {
+    //short_minutes_offset = 113;     //GOOD
+  //}
   
   // NEED TO ACCOUNT FOR A 1 IN THE MINUTES ONES PLACE!!!!!
   
