@@ -22,7 +22,7 @@ char lngmn_string[] = "0";
 char srtmn_string[] = "0";
 
 int long_hours_offset = 11;
-int short_hours_offset = 10;
+int short_hours_offset = 9;
 int long_minutes_offset = 81;
 int short_minutes_offset = 113;  // GOOD
 
@@ -111,27 +111,27 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     long_hours_offset = 10;
   }
   
-  if (strncmp("1", &time_buffer[2], 1) == 0) { // handles tens place of minutes
-    long_minutes_offset = 71; 
+  if (strncmp("1", &time_buffer[2], 1) == 0) { // handles tens place of minutes when it is 1
+    long_minutes_offset = 81; 
       if (strncmp("1", &time_buffer[3], 1) == 0) { // handles ones place of minutes
-        short_minutes_offset = long_minutes_offset + 28;
-      } else 
+        short_minutes_offset = long_minutes_offset + 7;
+      } else {
         short_minutes_offset = long_minutes_offset + 24;  // GOOD
-  } else {
+      }
+  } else { // handles tens place of minutes when it is NOT 1
     long_minutes_offset = 81;
       if (strncmp("1", &time_buffer[3], 1) == 0) { // handles ones place of minutes
-        short_minutes_offset = 105;
+        short_minutes_offset = long_minutes_offset + 28;
+      } else {
+        short_minutes_offset = long_minutes_offset + 32;
       }
   }
+  //ANIMATION TESTS TO DO: 
+    //Watch minutes go from 08 to 12
+      // 09 to 10: problems with the 0 to 1 animation in the tens place: 
+        // 1 in tens place is too far right -> Fix method changing long_minutes_offset
+        // Digit in ones place is too far right from the tens place, especially so for the number 11.
   
-  //if (strncmp("1", &time_buffer[3], 1) == 0) { // handles ones place of minutes
-    //short_minutes_offset = 105;    // GOOD FOR NOW, BUT TENS PLACE WILL BE MOVED EVENTUALLY AND THIS NUMBER WILL GET SMALLER
-    //short_minutes_offset = long_minutes_offset + 24;
-  //} else {
-    //short_minutes_offset = 113;     //GOOD
-  //}
-  
-  // NEED TO ACCOUNT FOR A 1 IN THE MINUTES ONES PLACE!!!!!
   
   
   // Triggering the animations:
@@ -266,6 +266,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       GRect digit_finish = GRect(short_hours_offset, 20, 57, 140);
       animate_digit_layer(text_layer_get_layer(text_hours_layer), &digit_start, &digit_finish, 1, 1);
     }
+    // NEED LONG_HOURS_OFFSET CASE HERE FOR IF MINUTES TENS IS A 1 *************************
     if (short_minutes_offset == 88) {
       GRect digit_start = GRect (99, 20, 33, 140);
       GRect digit_finish = GRect (short_minutes_offset, 20, 33, 140);
