@@ -250,11 +250,6 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       GRect digit_finish = GRect (long_hours_offset, 8, 26, 149);
       animate_digit_layer(bitmap_layer_get_layer(lnghr), &digit_start, &digit_finish, 1000, 1);
     }
-    if (short_hours_offset == 9) {
-      GRect digit_start = GRect(10, 20, 57, 140);
-      GRect digit_finish = GRect(short_hours_offset, 20, 57, 140);
-      animate_digit_layer(text_layer_get_layer(text_hours_layer), &digit_start, &digit_finish, 1000, 1);
-    }
     if (strncmp("1", &time_buffer[3], 1) == 0) { // for if the tens place of the minute is a one when the face launches
       GRect digit_start = GRect(81, 8, 26, 149);
       GRect digit_finish = GRect(long_minutes_offset, 8, 26, 149);
