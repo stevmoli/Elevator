@@ -100,7 +100,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
   
   if ((strncmp("1", &time_buffer[0], 1) == 0) && (strncmp("1", &time_buffer[1], 1) == 0)) { // handles tens place of hours when it is a one and the ones place is a one too
-    long_hours_offset = 21;
+    long_hours_offset = 28;
   }
   
   if ((strncmp("1", &time_buffer[0], 1) == 0) && (strncmp("1", &time_buffer[1], 1) != 0)) { // handles tens place of hours when it is a one and the ones place is not a one
@@ -236,18 +236,13 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
   // Add one time animations to fix initial positioning when watchface starts
   if (format_fix == 1) {
-    if (long_hours_offset == 20) { // for if the one's place of the hour is a one when the face launches
+    if ((long_hours_offset == 20) || (long_hours_offset == 28)) { // for if the one's place of the hour is a one (regardless of the tens place) when the face launches)
       GRect digit_start = GRect (4, 8, 26, 149);
       GRect digit_finish = GRect (long_hours_offset, 8, 26, 149);
       animate_digit_layer(bitmap_layer_get_layer(lnghr), &digit_start, &digit_finish, 1000, 1);  // moves tens place of hours
       GRect digit_start_2 = GRect (36, 8, 26, 149);
       GRect digit_finish_2 = GRect (44, 8, 26, 149);
       animate_digit_layer(bitmap_layer_get_layer(srthr), &digit_start_2, &digit_finish_2, 1000, 1);  // moves ones place of hours
-    }
-    if (long_hours_offset == 21) {
-      GRect digit_start = GRect (11, 20, 34, 140);
-      GRect digit_finish = GRect (long_hours_offset, 20, 34, 140);
-      animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 1000, 1);
     }
     if (long_hours_offset == 10) {
       GRect digit_start = GRect (11, 20, 34, 140);
