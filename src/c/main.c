@@ -236,7 +236,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
   // Add one time animations to fix initial positioning when watchface starts
   if (format_fix == 1) {
-    if ((long_hours_offset == 20) || (long_hours_offset == 28)) { // for if the one's place of the hour is a one (regardless of the tens place) when the face launches)
+    if ((long_hours_offset == 20) || (long_hours_offset == 28)) { // for if the ones place of the hour is a one (regardless of the tens place) when the face launches)
       GRect digit_start = GRect (4, 8, 26, 149);
       GRect digit_finish = GRect (long_hours_offset, 8, 26, 149);
       animate_digit_layer(bitmap_layer_get_layer(lnghr), &digit_start, &digit_finish, 1000, 1);  // moves tens place of hours
@@ -245,7 +245,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       animate_digit_layer(bitmap_layer_get_layer(srthr), &digit_start_2, &digit_finish_2, 1000, 1);  // moves ones place of hours
     }
     // TODO: use short_hours_offset to put the functionality of the below if statement into the above one
-    if (long_hours_offset == 12) {  // for if the tens place of the hour is a one and the one's place of the hour isn't
+    if (long_hours_offset == 12) {  // for if the tens place of the hour is a one and the ones place of the hour isn't
       GRect digit_start = GRect (11, 8, 26, 149);
       GRect digit_finish = GRect (long_hours_offset, 8, 26, 149);
       animate_digit_layer(bitmap_layer_get_layer(lnghr), &digit_start, &digit_finish, 1000, 1);
