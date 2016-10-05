@@ -24,13 +24,28 @@
                 "type": "png"
             },
             {
+                "file": "images/6.png",
+                "name": "N_6",
+                "type": "png"
+            },
+            {
                 "file": "images/5.png",
                 "name": "N_5",
                 "type": "png"
             },
             {
+                "file": "images/4.png",
+                "name": "N_4",
+                "type": "png"
+            },
+            {
                 "file": "images/3.png",
                 "name": "N_3",
+                "type": "png"
+            },
+            {
+                "file": "images/2.png",
+                "name": "N_2",
                 "type": "png"
             },
             {
@@ -41,21 +56,6 @@
             {
                 "file": "images/0.png",
                 "name": "N_0",
-                "type": "png"
-            },
-            {
-                "file": "images/6.png",
-                "name": "N_6",
-                "type": "png"
-            },
-            {
-                "file": "images/4.png",
-                "name": "N_4",
-                "type": "png"
-            },
-            {
-                "file": "images/2.png",
-                "name": "N_2",
                 "type": "png"
             },
             {

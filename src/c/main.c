@@ -78,7 +78,7 @@ void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, 
 
 void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
-  // get the time put into the buffer created earlier.  if statement allows for 12hr and 24hr time
+  // Get the time put into the buffer created earlier.  The if statement allows for 12hr and 24hr time
   if (clock_is_24h_style() == true) {
     strftime(time_buffer, sizeof("00:00"), "%R", tick_time);
   } else {
@@ -91,7 +91,8 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
   
   // Dealing with font alignment when the digit 1 is used
-  if (strncmp("1", &time_buffer[1], 1) == 0) { // handles tens place and ones place of hours when ones place is one
+  if (strncmp("1", &time_buffer[1], 1) == 0) { 
+    // handles tens place and ones place of hours when ones place is one
     long_hours_offset = 20;
     short_hours_offset = 9;
   } else {
@@ -99,11 +100,13 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     short_hours_offset = 10;
   }
   
-  if ((strncmp("1", &time_buffer[0], 1) == 0) && (strncmp("1", &time_buffer[1], 1) == 0)) { // handles tens place of hours when it is a one and the ones place is a one too
+  // handles tens place of hours when it is a one and the ones place is a one too
+  if ((strncmp("1", &time_buffer[0], 1) == 0) && (strncmp("1", &time_buffer[1], 1) == 0)) {
     long_hours_offset = 28;
   }
   
-  if ((strncmp("1", &time_buffer[0], 1) == 0) && (strncmp("1", &time_buffer[1], 1) != 0)) { // handles tens place of hours when it is a one and the ones place is not a one
+  // handles tens place of hours when it is a one and the ones place is not a one
+  if ((strncmp("1", &time_buffer[0], 1) == 0) && (strncmp("1", &time_buffer[1], 1) != 0)) {
     long_hours_offset = 12;
   }
   
@@ -127,31 +130,37 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // Triggering the animations:
   
   //PRE DIGIT CHANGE
-  if (seconds == 58) {  // ones digit of minutes falls before changing
+  // ones digit of minutes falls before changing
+  if (seconds == 58) { 
     GRect digit_start = GRect(short_minutes_offset, 8, 26, 149);  // GOOD
     GRect digit_finish = GRect(short_minutes_offset, 170, 26, 149);
     animate_digit_layer(bitmap_layer_get_layer(srtmn), &digit_start, &digit_finish, 1850, 1);
   }
   
-  if ((seconds == 58) && (strncmp("9", &time_buffer[4], 1) == 0)) {  // tens digit of minutes rises before changing
+  // tens digit of minutes rises before changing
+  if ((seconds == 58) && (strncmp("9", &time_buffer[4], 1) == 0)) { 
     GRect digit_start = GRect(long_minutes_offset, 8, 26, 149);
     GRect digit_finish = GRect(long_minutes_offset, -150, 26, 149);
     animate_digit_layer(bitmap_layer_get_layer(lngmn), &digit_start, &digit_finish, 1850, 1);
   }
   
-  if ((seconds == 58) && (minutes == 59)) {  // ones digit of hours falls before changing
+  // ones digit of hours falls before changing
+  if ((seconds == 58) && (minutes == 59)) { 
     GRect digit_start = GRect (short_hours_offset, 20, 57, 140);
     GRect digit_finish = GRect (short_hours_offset, 170, 57, 140);
     animate_digit_layer(text_layer_get_layer(text_hours_layer), &digit_start, &digit_finish, 1850, 1);
   }
   
-  if (clock_is_24h_style() == true) {  // tens digit of hours rises before changing (and according to 12hr or 24 hr time)
-    if ((seconds == 58) && (minutes == 59) && ((hours == 9) || (hours == 19) || (hours == 23))) {  // this handles 24hr time
+  // tens digit of hours rises before changing (and according to 12hr or 24 hr time)
+  if (clock_is_24h_style() == true) { 
+    // this handles 24hr time
+    if ((seconds == 58) && (minutes == 59) && ((hours == 9) || (hours == 19) || (hours == 23))) { 
       GRect digit_start = GRect (long_hours_offset, 20, 34, 140);
       GRect digit_finish = GRect (long_hours_offset, -150, 34, 140);
       animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 1850, 1);
     }
-  } else { // now we will deal with the 12hr case
+  } else { 
+    // now we will deal with the 12hr case
     if ((seconds == 58) && (minutes == 59) && ((hours == 9) || (hours == 12) || (hours == 21) || (hours == 0))) {
       GRect digit_start = GRect (long_hours_offset, 20, 34, 140);
       GRect digit_finish = GRect (long_hours_offset, -150, 34, 140);
@@ -160,31 +169,37 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
   
   // POST DIGIT CHANGE
-  if (seconds == 0) {  // ones digit of minutes falls after changing
+  // ones digit of minutes falls after changing
+  if (seconds == 0) { 
     GRect digit_start = GRect(short_minutes_offset, -150, 26, 149);  // GOOD
     GRect digit_finish = GRect(short_minutes_offset, 8, 26, 149);
     animate_digit_layer(bitmap_layer_get_layer(srtmn), &digit_start, &digit_finish, 800, 1);
   }
   
-  if ((seconds == 0) && (strncmp("0", &time_buffer[4], 1) == 0)) {  // tens digit of minutes rises after changing
+  // tens digit of minutes rises after changing
+  if ((seconds == 0) && (strncmp("0", &time_buffer[4], 1) == 0)) { 
     GRect digit_start = GRect(long_minutes_offset, 170, 26, 149);
     GRect digit_finish = GRect(long_minutes_offset, 8, 26, 149);
     animate_digit_layer(bitmap_layer_get_layer(lngmn), &digit_start, &digit_finish, 800, 100);
   }
   
-  if ((seconds == 0) && (minutes == 0)) {  // ones digit of hours falls after changing
+  // ones digit of hours falls after changing
+  if ((seconds == 0) && (minutes == 0)) { 
     GRect digit_start = GRect (short_hours_offset, -150, 57, 140);
     GRect digit_finish = GRect (short_hours_offset, 20, 57, 140);
     animate_digit_layer(text_layer_get_layer(text_hours_layer), &digit_start, &digit_finish, 800, 100);
   }
   
-  if (clock_is_24h_style() == true) { // tens digit of hours rises after changing (accounting again for 24hr and 12hr time)
-    if ((seconds == 0) && (minutes == 0) && ((hours == 10) || (hours == 20) || (hours == 0))) { // 24hr time
+  // tens digit of hours rises after changing (accounting again for 24hr and 12hr time)
+  if (clock_is_24h_style() == true) { 
+    // 24hr time
+    if ((seconds == 0) && (minutes == 0) && ((hours == 10) || (hours == 20) || (hours == 0))) { 
       GRect digit_start = GRect (long_hours_offset, 170, 34, 140);
       GRect digit_finish = GRect (long_hours_offset, 20, 34, 140);
       animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 800, 1);
     }
-  } else { // 12hr time
+  } else { 
+    // 12hr time
     if (((seconds == 0) && (minutes == 0)) && ((hours == 10) || (hours == 13) || (hours == 22) || (hours == 1))) {
       GRect digit_start = GRect (long_hours_offset, 170, 34, 140);
       GRect digit_finish = GRect (long_hours_offset, 20, 34, 140);
@@ -199,13 +214,15 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 400, 1);    
   }
   
-  if (clock_is_24h_style() == false) { // dealing with 11 PM
+  // dealing with 11 PM
+  if (clock_is_24h_style() == false) { 
     if ((hours == 23) && (minutes == 0) && (seconds == 0)) {
       GRect digit_start = GRect (11, 20, 34, 140);
       GRect digit_finish = GRect (long_hours_offset, 20, 34, 140);
       animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 400, 1);
     }
-  } else { // and dealing with 21:00
+  } else { 
+    // and dealing with 21:00
     if ((hours == 21) && (minutes == 0) && (seconds == 0)) {
       GRect digit_start = GRect (11, 20, 34, 140);
       GRect digit_finish = GRect (long_hours_offset, 20, 34, 140);
@@ -220,13 +237,15 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 400, 1);
   }
   
-  if (clock_is_24h_style() == false) { // dealiing with 11 PM switching to midnight and 1 PM switching to 2 PM
+  // dealiing with 11 PM switching to midnight and 1 PM switching to 2 PM
+  if (clock_is_24h_style() == false) { 
     if (((hours == 0) || (hours == 14)) && (minutes == 0) && (seconds == 0)) {
     GRect digit_start = GRect (22, 20, 34, 140);
     GRect digit_finish = GRect (long_hours_offset, 20, 34, 140);
     animate_digit_layer(text_layer_get_layer(text_long_hours_layer), &digit_start, &digit_finish, 400, 1);
     }
-  } else { // and dealing with 21:59 switching to 22:00
+  } else { 
+    // and dealing with 21:59 switching to 22:00
     if ((hours == 22) && (minutes == 0) && (seconds == 0)) {
     GRect digit_start = GRect (22, 20, 34, 140);
     GRect digit_finish = GRect (long_hours_offset, 20, 34, 140);
@@ -245,12 +264,14 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       animate_digit_layer(bitmap_layer_get_layer(srthr), &digit_start_2, &digit_finish_2, 1000, 1);  // moves ones place of hours
     }
     // TODO: use short_hours_offset to put the functionality of the below if statement into the above one
-    if (long_hours_offset == 12) {  // for if the tens place of the hour is a one and the ones place of the hour isn't
+    // for if the tens place of the hour is a one and the ones place of the hour isn't
+    if (long_hours_offset == 12) { 
       GRect digit_start = GRect (11, 8, 26, 149);
       GRect digit_finish = GRect (long_hours_offset, 8, 26, 149);
       animate_digit_layer(bitmap_layer_get_layer(lnghr), &digit_start, &digit_finish, 1000, 1);
     }
-    if (strncmp("1", &time_buffer[3], 1) == 0) { // for if the tens place of the minute is a one when the face launches
+    // for if the tens place of the minute is a one when the face launches
+    if (strncmp("1", &time_buffer[3], 1) == 0) { 
       GRect digit_start = GRect(81, 8, 26, 149);
       GRect digit_finish = GRect(long_minutes_offset, 8, 26, 149);
       animate_digit_layer(bitmap_layer_get_layer(lngmn), &digit_start, &digit_finish, 1000, 1);
@@ -258,7 +279,8 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       GRect digit_start2 = GRect(113, 8, 26, 149);  // the ones place has to be moved accordingly too
       GRect digit_finish2 = GRect(short_minutes_offset, 8, 26, 149);
       animate_digit_layer(bitmap_layer_get_layer(srtmn), &digit_start2, &digit_finish2, 1000, 1);
-    } else if (strncmp("1", &time_buffer[4], 1) == 0) { // for if the ones place of the minute is a one when the face launches
+    } else if (strncmp("1", &time_buffer[4], 1) == 0) { 
+      // for if the ones place of the minute is a one when the face launches
       GRect digit_start = GRect(113, 8, 26, 149);
       GRect digit_finish = GRect(short_minutes_offset, 8, 26, 149);
       animate_digit_layer(bitmap_layer_get_layer(lngmn), &digit_start, &digit_finish, 1000, 1);
