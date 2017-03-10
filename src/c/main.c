@@ -12,12 +12,12 @@ TextLayer *background_layer;
 
 static char time_buffer[] = "00:00";
 
-BitmapLayer *lnghr, *srthr, *lngmn, *srtmn;
+BitmapLayer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
 
-char lnghr_string[] = "0";
-char srthr_string[] = "0";
-char lngmn_string[] = "0";
-char srtmn_string[] = "0";
+char tens_hour_string[] = "0";
+char ones_hour_string[] = "0";
+char tens_minute_string[] = "0";
+char ones_minute_string[] = "0";
 
 int long_hours_offset = 4;  //was 11
 int short_hours_offset = 9;
@@ -134,14 +134,14 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   if (seconds == 58) { 
     GRect digit_start = GRect(short_minutes_offset, 8, 26, 149);  // GOOD
     GRect digit_finish = GRect(short_minutes_offset, 170, 26, 149);
-    animate_digit_layer(bitmap_layer_get_layer(srtmn), &digit_start, &digit_finish, 1850, 1);
+    animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start, &digit_finish, 1850, 1);
   }
   
   // tens digit of minutes rises before changing
   if ((seconds == 58) && (strncmp("9", &time_buffer[4], 1) == 0)) { 
     GRect digit_start = GRect(long_minutes_offset, 8, 26, 149);
     GRect digit_finish = GRect(long_minutes_offset, -150, 26, 149);
-    animate_digit_layer(bitmap_layer_get_layer(lngmn), &digit_start, &digit_finish, 1850, 1);
+    animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 1850, 1);
   }
   
   // ones digit of hours falls before changing
@@ -173,14 +173,14 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   if (seconds == 0) { 
     GRect digit_start = GRect(short_minutes_offset, -150, 26, 149);  // GOOD
     GRect digit_finish = GRect(short_minutes_offset, 8, 26, 149);
-    animate_digit_layer(bitmap_layer_get_layer(srtmn), &digit_start, &digit_finish, 800, 1);
+    animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start, &digit_finish, 800, 1);
   }
   
   // tens digit of minutes rises after changing
   if ((seconds == 0) && (strncmp("0", &time_buffer[4], 1) == 0)) { 
     GRect digit_start = GRect(long_minutes_offset, 170, 26, 149);
     GRect digit_finish = GRect(long_minutes_offset, 8, 26, 149);
-    animate_digit_layer(bitmap_layer_get_layer(lngmn), &digit_start, &digit_finish, 800, 100);
+    animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 800, 100);
   }
   
   // ones digit of hours falls after changing
@@ -260,33 +260,33 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       GRect digit_start = GRect (4, 8, 26, 149);
       GRect digit_finish = GRect (long_hours_offset, 8, 26, 149);
       // move the tens place of the hour
-      animate_digit_layer(bitmap_layer_get_layer(lnghr), &digit_start, &digit_finish, 1000, 1);
+      animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1000, 1);
       GRect digit_start_2 = GRect (36, 8, 26, 149);
       GRect digit_finish_2 = GRect (44, 8, 26, 149);
       // move the ones place of the hour
-      animate_digit_layer(bitmap_layer_get_layer(srthr), &digit_start_2, &digit_finish_2, 1000, 1);  
+      animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start_2, &digit_finish_2, 1000, 1);  
     }
     // TODO: use short_hours_offset to put the functionality of the below if statement into the above one
     // for if the tens place of the hour is a one and the ones place of the hour isn't
     if (long_hours_offset == 12) { 
       GRect digit_start = GRect (11, 8, 26, 149);
       GRect digit_finish = GRect (long_hours_offset, 8, 26, 149);
-      animate_digit_layer(bitmap_layer_get_layer(lnghr), &digit_start, &digit_finish, 1000, 1);
+      animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1000, 1);
     }
     // for if the tens place of the minute is a one when the face launches
     if (strncmp("1", &time_buffer[3], 1) == 0) { 
       GRect digit_start = GRect(81, 8, 26, 149);
       GRect digit_finish = GRect(long_minutes_offset, 8, 26, 149);
-      animate_digit_layer(bitmap_layer_get_layer(lngmn), &digit_start, &digit_finish, 1000, 1);
+      animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 1000, 1);
       
       GRect digit_start2 = GRect(113, 8, 26, 149);  // the ones place has to be moved accordingly too
       GRect digit_finish2 = GRect(short_minutes_offset, 8, 26, 149);
-      animate_digit_layer(bitmap_layer_get_layer(srtmn), &digit_start2, &digit_finish2, 1000, 1);
+      animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start2, &digit_finish2, 1000, 1);
     } else if (strncmp("1", &time_buffer[4], 1) == 0) { 
       // for if the ones place of the minute is a one when the face launches
       GRect digit_start = GRect(113, 8, 26, 149);
       GRect digit_finish = GRect(short_minutes_offset, 8, 26, 149);
-      animate_digit_layer(bitmap_layer_get_layer(lngmn), &digit_start, &digit_finish, 1000, 1);
+      animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 1000, 1);
     }
     format_needs_fix = false; 
   }
@@ -294,16 +294,16 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // DONE with animations
 
   // Getting current digits as strings
-  *lnghr_string = time_buffer[0];
-  *srthr_string = time_buffer[1];
-  *lngmn_string = time_buffer[3];
-  *srtmn_string = time_buffer[4];
+  *tens_hour_string = time_buffer[0];
+  *ones_hour_string = time_buffer[1];
+  *tens_minute_string = time_buffer[3];
+  *ones_minute_string = time_buffer[4];
   
   // image layers updated with image_update method
-  image_update(lnghr_string, lnghr);
-  image_update(srthr_string, srthr);
-  image_update(lngmn_string, lngmn);
-  image_update(srtmn_string, srtmn);
+  image_update(tens_hour_string, tens_hour);
+  image_update(ones_hour_string, ones_hour);
+  image_update(tens_minute_string, tens_minute);
+  image_update(ones_minute_string, ones_minute);
 
 } // end of tick handler
 
@@ -326,10 +326,10 @@ void window_load (Window *my_window) {
   nine = gbitmap_create_with_resource(RESOURCE_ID_N_9);
   
   // creating the gbitmap layers
-  lnghr = bitmap_layer_create(GRect(4, 8, 26, 149));
-  srthr = bitmap_layer_create(GRect(36, 8, 26, 149)); // 44 when 1??
-  lngmn = bitmap_layer_create(GRect(81, 8, 26, 149));
-  srtmn = bitmap_layer_create(GRect(113, 8, 26, 149));
+  tens_hour = bitmap_layer_create(GRect(4, 8, 26, 149));
+  ones_hour = bitmap_layer_create(GRect(36, 8, 26, 149)); // 44 when 1??
+  tens_minute = bitmap_layer_create(GRect(81, 8, 26, 149));
+  ones_minute = bitmap_layer_create(GRect(113, 8, 26, 149));
   
   // loading the time
   HBH_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_HBH_120));
@@ -360,10 +360,10 @@ void window_load (Window *my_window) {
   layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(text_long_hours_layer));
   layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(text_colon_layer));
   
-  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(lnghr));
-  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(srthr));
-  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(lngmn));
-  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(srtmn));
+  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(tens_hour));
+  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(ones_hour));
+  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(tens_minute));
+  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(ones_minute));
   
   
   // preventing face from starting blank
@@ -375,10 +375,10 @@ void window_load (Window *my_window) {
 }
 
 void window_unload (Window *my_window) {
-  bitmap_layer_destroy(lnghr);
-  bitmap_layer_destroy(srthr);
-  bitmap_layer_destroy(lngmn);
-  bitmap_layer_destroy(srtmn);
+  bitmap_layer_destroy(tens_hour);
+  bitmap_layer_destroy(ones_hour);
+  bitmap_layer_destroy(tens_minute);
+  bitmap_layer_destroy(ones_minute);
   
   text_layer_destroy(text_hours_layer);
   text_layer_destroy(background_layer);
