@@ -24,7 +24,7 @@ int short_hours_offset = 9;
 int long_minutes_offset = 81;
 int short_minutes_offset = 113;  // GOOD
 
-int format_fix = 1;
+bool format_needs_fix = true;
 
 // Updates BitmapLayers with the correct digit images, based on the current time (digits passed in as digit_string)
 void image_update(char digit_string[], BitmapLayer *image){
@@ -254,7 +254,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
   
   // Add one time animations to fix initial positioning when watchface starts
-  if (format_fix == 1) {
+  if (format_needs_fix == true) {
     // for if the ones place of the hour is a one (regardless of the tens place) when the face launches)
     if ((long_hours_offset == 20) || (long_hours_offset == 28)) { 
       GRect digit_start = GRect (4, 8, 26, 149);
@@ -288,7 +288,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       GRect digit_finish = GRect(short_minutes_offset, 8, 26, 149);
       animate_digit_layer(bitmap_layer_get_layer(lngmn), &digit_start, &digit_finish, 1000, 1);
     }
-    format_fix--; 
+    format_needs_fix = false; 
   }
   
   // DONE with animations
