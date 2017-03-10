@@ -100,14 +100,15 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     short_hours_offset = 10;
   }
   
-  // handles tens place of hours when it is a one and the ones place is a one too
-  if ((strncmp("1", &time_buffer[0], 1) == 0) && (strncmp("1", &time_buffer[1], 1) == 0)) {
-    long_hours_offset = 28;
-  }
-  
-  // handles tens place of hours when it is a one and the ones place is not a one
-  if ((strncmp("1", &time_buffer[0], 1) == 0) && (strncmp("1", &time_buffer[1], 1) != 0)) {
-    long_hours_offset = 12;
+  // Handle cases where tens place of hours is a one:
+  if (strncmp("1", &time_buffer[0], 1) == 0) {
+    // If the ones place of hours is a one as well:
+    if (strncmp("1", &time_buffer[1], 1) == 0) {
+      long_hours_offset = 28;
+    } else {
+      // If ones place of hours isn't a one:
+      long_hours_offset = 12;
+    }
   }
   
   if (strncmp("1", &time_buffer[3], 1) == 0) { // handles tens place of minutes when it is 1
