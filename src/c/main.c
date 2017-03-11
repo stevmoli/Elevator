@@ -24,17 +24,17 @@ const int DIGIT_HEIGHT = 149;
   its ones place positioned with ONES_MINUTE_ONE_ZERO
 */
 const int TENS_HOUR_ZERO_ZERO = 4;
-// const int TENS_HOUR_ZERO_ONE =
-// const int TENS_HOUR_ONE_ZERO =
-// const int TENS_HOUR_ONE_ONE =
-const int ONES_HOUR_ZERO = 36;
-// const int ONES_HOUR_ONE =
+const int TENS_HOUR_ZERO_ONE = 20;
+const int TENS_HOUR_ONE_ZERO = 20; // TODO: check this value, it's just a guess
+const int TENS_HOUR_ONE_ONE = 28;
+const int ONES_HOUR_ZERO = 36; // TODO: check this value
+const int ONES_HOUR_ONE = 52; // TODO: check this value, it's just a guess
 const int TENS_MINUTE_ZERO = 81;
-// const int TENS_MINUTE_ONE =
+const int TENS_MINUTE_ONE = 72;
 const int ONES_MINUTE_ZERO_ZERO = 113;
-// const int ONES_MINUTE_ZERO_ONE =
-// const int ONES_MINUTE_ONE_ZERO =
-// const int ONES_MINUTE_ONE_ONE =
+const int ONES_MINUTE_ZERO_ONE = 105;
+const int ONES_MINUTE_ONE_ZERO = 96;
+const int ONES_MINUTE_ONE_ONE = 88;
 
 BitmapLayer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
 
@@ -43,11 +43,11 @@ char ones_hour_string[] = "0";
 char tens_minute_string[] = "0";
 char ones_minute_string[] = "0";
 
-// Values of these static ints are initialized in the main() method
+// Values of these static ints are initialized in the main() method (only initializing them here)
 static int tens_hour_Xpos;
 static int ones_hour_Xpos;
-static int long_minutes_offset;
-static int short_minutes_offset;
+static int tens_minute_Xpos;
+static int ones_minute_Xpos;
 
 bool format_needs_fix = true;
 
@@ -119,48 +119,58 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   /// Hours ///
   // If ones place of hours is a 1:
   if (strncmp("1", &time_buffer[1], 1) == 0) { 
-    ones_hour_Xpos = 9;
+    ones_hour_Xpos = ONES_HOUR_ONE;
 
     // If tens place of hours is a 1
     if (strncmp("1", &time_buffer[0], 1) == 0) {
-      tens_hour_Xpos = 28;
+      tens_hour_Xpos = TENS_HOUR_ONE_ONE;
 
     // If tens place of hours isn't a 1
     } else {
-      tens_hour_Xpos = 20;
+      tens_hour_Xpos = TENS_HOUR_ZERO_ONE;
     }
 
   // If ones place of hours isn't a 1
   } else {
-    ones_hour_Xpos = 10;
+    ones_hour_Xpos = ONES_HOUR_ZERO;
 
     // If tens place of hours is a 1
     if (strncmp("1", &time_buffer[0], 1) == 0) {
-      tens_hour_Xpos = 12;
+      tens_hour_Xpos = TENS_HOUR_ONE_ZERO;
     
     // If tens place of hours isn't a 1
     } else {
-      tens_hour_Xpos = 11;
+      tens_hour_Xpos = TENS_HOUR_ZERO_ZERO;
     }
   }
 
   /// Minutes ///  
-  if (strncmp("1", &time_buffer[3], 1) == 0) { // handles tens place of minutes when it is 1
-    long_minutes_offset = 72; 
-      if (strncmp("1", &time_buffer[4], 1) == 0) { // handles ones place of minutes
-        short_minutes_offset = long_minutes_offset + 16;
-      } else {
-        short_minutes_offset = long_minutes_offset + 24;  // GOOD
-      }
-  } else { // handles tens place of minutes when it is NOT 1
-    long_minutes_offset = 81;
-      if (strncmp("1", &time_buffer[4], 1) == 0) { // handles ones place of minutes
-        short_minutes_offset = long_minutes_offset + 24;
-      } else {
-        short_minutes_offset = long_minutes_offset + 32;
-      }
+  // If tens place of minutes is a 1
+  if (strncmp("1", &time_buffer[3], 1) == 0) {
+    tens_minute_Xpos = TENS_MINUTE_ONE; 
+
+    // If ones place of minutes is a 1
+    if (strncmp("1", &time_buffer[4], 1) == 0) {
+      ones_minute_Xpos = ONES_MINUTE_ONE_ONE;
+
+    // If ones place of minutes isn't a 1
+    } else {
+      ones_minute_Xpos = ONES_MINUTE_ONE_ZERO;
+    }
+
+  // If tens place of minutes isn't a 1
+  } else {
+    tens_minute_Xpos = TENS_MINUTE_ZERO;
+
+    // If ones place of minutes is a 1
+    if (strncmp("1", &time_buffer[4], 1) == 0) {
+      ones_minute_Xpos = ONES_MINUTE_ZERO_ONE;
+    
+    // If ones place of minutes isn't a 1
+    } else {
+      ones_minute_Xpos = ONES_MINUTE_ZERO_ZERO;
+    }
   }
-  // TODO: ^ do I need to do something like this for hours?
   
   
   // Triggering the animations:
@@ -168,15 +178,15 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   //PRE DIGIT CHANGE
   // ones digit of minutes falls before changing
   if (seconds == 58) { 
-    GRect digit_start = GRect(short_minutes_offset, NORMAL_Y, 26, DIGIT_HEIGHT);  // GOOD
-    GRect digit_finish = GRect(short_minutes_offset, LOW_Y, 26, DIGIT_HEIGHT);
+    GRect digit_start = GRect(ones_minute_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);  // GOOD
+    GRect digit_finish = GRect(ones_minute_Xpos, LOW_Y, 26, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start, &digit_finish, 1850, 1);
   }
   
   // tens digit of minutes rises before changing
   if ((seconds == 58) && (strncmp("9", &time_buffer[4], 1) == 0)) { 
-    GRect digit_start = GRect(long_minutes_offset, NORMAL_Y, 26, DIGIT_HEIGHT);
-    GRect digit_finish = GRect(long_minutes_offset, HIGH_Y, 26, DIGIT_HEIGHT);
+    GRect digit_start = GRect(tens_minute_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
+    GRect digit_finish = GRect(tens_minute_Xpos, HIGH_Y, 26, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 1850, 1);
   }
   
@@ -207,15 +217,15 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // POST DIGIT CHANGE
   // ones digit of minutes falls after changing
   if (seconds == 0) { 
-    GRect digit_start = GRect(short_minutes_offset, HIGH_Y, 26, DIGIT_HEIGHT);  // GOOD
-    GRect digit_finish = GRect(short_minutes_offset, NORMAL_Y, 26, DIGIT_HEIGHT);
+    GRect digit_start = GRect(ones_minute_Xpos, HIGH_Y, 26, DIGIT_HEIGHT);  // GOOD
+    GRect digit_finish = GRect(ones_minute_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start, &digit_finish, 800, 1);
   }
   
   // tens digit of minutes rises after changing
   if ((seconds == 0) && (strncmp("0", &time_buffer[4], 1) == 0)) { 
-    GRect digit_start = GRect(long_minutes_offset, LOW_Y, 26, DIGIT_HEIGHT);
-    GRect digit_finish = GRect(long_minutes_offset, NORMAL_Y, 26, DIGIT_HEIGHT);
+    GRect digit_start = GRect(tens_minute_Xpos, LOW_Y, 26, DIGIT_HEIGHT);
+    GRect digit_finish = GRect(tens_minute_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 800, 100);
   }
   
@@ -312,16 +322,16 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     // for if the tens place of the minute is a one when the face launches
     if (strncmp("1", &time_buffer[3], 1) == 0) { 
       GRect digit_start = GRect(81, NORMAL_Y, 26, DIGIT_HEIGHT);
-      GRect digit_finish = GRect(long_minutes_offset, NORMAL_Y, 26, DIGIT_HEIGHT);
+      GRect digit_finish = GRect(tens_minute_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 1000, 1);
       
       GRect digit_start2 = GRect(113, NORMAL_Y, 26, DIGIT_HEIGHT);  // the ones place has to be moved accordingly too
-      GRect digit_finish2 = GRect(short_minutes_offset, NORMAL_Y, 26, DIGIT_HEIGHT);
+      GRect digit_finish2 = GRect(ones_minute_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start2, &digit_finish2, 1000, 1);
     } else if (strncmp("1", &time_buffer[4], 1) == 0) { 
       // for if the ones place of the minute is a one when the face launches
       GRect digit_start = GRect(113, NORMAL_Y, 26, DIGIT_HEIGHT);
-      GRect digit_finish = GRect(short_minutes_offset, NORMAL_Y, 26, DIGIT_HEIGHT);
+      GRect digit_finish = GRect(ones_minute_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 1000, 1);
     }
     format_needs_fix = false; 
@@ -424,9 +434,9 @@ void handle_deinit(void) {
 
 int main(void) {
   tens_hour_Xpos = TENS_HOUR_ZERO_ZERO;
-  ones_hour_Xpos = 9; // TODO: is this right?
-  long_minutes_offset = 81;
-  short_minutes_offset = 113;  // GOOD
+  ones_hour_Xpos = ONES_HOUR_ZERO;
+  tens_minute_Xpos = TENS_MINUTE_ZERO;
+  ones_minute_Xpos = ONES_MINUTE_ZERO_ZERO;
   
   handle_init();
   app_event_loop();
