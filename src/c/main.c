@@ -43,10 +43,11 @@ char ones_hour_string[] = "0";
 char tens_minute_string[] = "0";
 char ones_minute_string[] = "0";
 
-static int tens_hour_Xpos;// = TENS_HOUR_ZERO_ZERO;
-static int ones_hour_Xpos;// = 9; // TODO: is this right?
-static int long_minutes_offset;// = 81;
-static int short_minutes_offset;// = 113;  // GOOD
+// Values of these static ints are initialized in the main() method
+static int tens_hour_Xpos;
+static int ones_hour_Xpos;
+static int long_minutes_offset;
+static int short_minutes_offset;
 
 bool format_needs_fix = true;
 
@@ -426,6 +427,7 @@ int main(void) {
   ones_hour_Xpos = 9; // TODO: is this right?
   long_minutes_offset = 81;
   short_minutes_offset = 113;  // GOOD
+  
   handle_init();
   app_event_loop();
   handle_deinit();
