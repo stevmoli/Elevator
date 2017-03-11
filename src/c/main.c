@@ -114,6 +114,18 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   int minutes = tick_time->tm_min;  // allowing for action when the minute changes
   int seconds = tick_time->tm_sec; // allowing for action when the second changes
 
+  // Getting current digits as strings
+  *tens_hour_string = time_buffer[0];
+  *ones_hour_string = time_buffer[1];
+  *tens_minute_string = time_buffer[3];
+  *ones_minute_string = time_buffer[4];
+  
+  // image layers updated with image_update method
+  image_update(tens_hour_string, tens_hour);
+  image_update(ones_hour_string, ones_hour);
+  image_update(tens_minute_string, tens_minute);
+  image_update(ones_minute_string, ones_minute);
+
   ///// Dealing with digit alignment in cases when the digit 1 is used /////
 
   /// Hours ///
@@ -254,6 +266,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
   
   // Animating digit adjustment when a one appears in the hours ones place
+  // TODO: use variables for starting X positions
   if (((hours == 1) || (hours == 11)) && (minutes == 0) && (seconds == 0)) {
       GRect digit_start = GRect (11, NORMAL_Y, 34, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
@@ -344,18 +357,6 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
   
   // DONE with animations
-
-  // Getting current digits as strings
-  *tens_hour_string = time_buffer[0];
-  *ones_hour_string = time_buffer[1];
-  *tens_minute_string = time_buffer[3];
-  *ones_minute_string = time_buffer[4];
-  
-  // image layers updated with image_update method
-  image_update(tens_hour_string, tens_hour);
-  image_update(ones_hour_string, ones_hour);
-  image_update(tens_minute_string, tens_minute);
-  image_update(ones_minute_string, ones_minute);
 
 } // end of tick handler
 
