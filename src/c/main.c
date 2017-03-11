@@ -9,31 +9,32 @@ static GFont HBH_font;
 TextLayer *background_layer;
 
 static char time_buffer[] = "00:00";
-static int NORMAL_Y = 8; // Normal y position of digits
-static int HIGH_Y = -150; // High y position of digits (for when above top of screen during animation)
-static int LOW_Y = 170; // Low y position of digits (for when below bottom of screen during animation)
-static int DIGIT_HEIGHT = 149;
+
+const int NORMAL_Y = 8; // Normal y position of digits
+const int HIGH_Y = -150; // High y position of digits (for when above top of screen during animation)
+const int LOW_Y = 170; // Low y position of digits (for when below bottom of screen during animation)
+const int DIGIT_HEIGHT = 149;
 /* 
-  The below static ints are the x position of the specified digit when the minute or hour digits match
-  the format of the digits in the variable name. 1 represents a 1, 0 represents any other digit.
+  The below constant ints are the x position of the specified digit when the minute or hour digits match
+  the format of the digits in the variable name. ONE represents a 1, ZERO represents any other digit.
   The tens place of the hour and ones place of the minutes can be offset by the ones place of the hour
   and tens place of the minute, respectively, so these digits require formats including both digits.
-  I.E., the hour "12" would have its tens place positioned with TENS_HOUR_10 and ones place positioned
-  with ONES_HOUR_0, while the minute "12" would have its tens place positioned with TENS_MINUTE_1 and 
-  its hours place positioned with TENS_HOUR_01
+  I.E., the hour "12" would have its tens place positioned with TENS_HOUR_ONE_ZERO and ones place positioned
+  with ONES_HOUR_ZERO, while the minute "12" would have its tens place positioned with TENS_MINUTE_ONE and 
+  its ones place positioned with ONES_MINUTE_ONE_ZERO
 */
-static int TENS_HOUR_00 = 4;
-// static int TENS_HOUR_01 =
-// static int TENS_HOUR_10 =
-// static int TENS_HOUR_11 =
-static int ONES_HOUR_0 = 36;
-// static int ONES_HOUR_1 =
-static int TENS_MINUTE_0 = 81;
-// static int TENS_HOUR_1 =
-static int ONES_MINUTE_00 = 113;
-// static int ONES_MINUTE_01 =
-// static int ONES_MINUTE_10 =
-// static int ONES_MINUTE_11 =
+const int TENS_HOUR_ZERO_ZERO = 4;
+// const int TENS_HOUR_ZERO_ONE =
+// const int TENS_HOUR_ONE_ZERO =
+// const int TENS_HOUR_ONE_ONE =
+const int ONES_HOUR_ZERO = 36;
+// const int ONES_HOUR_ONE =
+const int TENS_MINUTE_ZERO = 81;
+// const int TENS_MINUTE_ONE =
+const int ONES_MINUTE_ZERO_ZERO = 113;
+// const int ONES_MINUTE_ZERO_ONE =
+// const int ONES_MINUTE_ONE_ZERO =
+// const int ONES_MINUTE_ONE_ONE =
 
 BitmapLayer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
 
@@ -42,7 +43,7 @@ char ones_hour_string[] = "0";
 char tens_minute_string[] = "0";
 char ones_minute_string[] = "0";
 
-int tens_hour_Xpos = TENS_HOUR_00;
+int tens_hour_Xpos = TENS_HOUR_ZERO_ZERO;
 int ones_hour_Xpos = 9; // TODO: is this right?
 int long_minutes_offset = 81;
 int short_minutes_offset = 113;  // GOOD
@@ -360,10 +361,10 @@ void window_load (Window *my_window) {
   nine = gbitmap_create_with_resource(RESOURCE_ID_N_9);
   
   // creating the gbitmap layers
-  tens_hour = bitmap_layer_create(GRect(TENS_HOUR_00, NORMAL_Y, 26, DIGIT_HEIGHT));
-  ones_hour = bitmap_layer_create(GRect(ONES_HOUR_0, NORMAL_Y, 26, DIGIT_HEIGHT)); // 44 when 1??
-  tens_minute = bitmap_layer_create(GRect(TENS_MINUTE_0, NORMAL_Y, 26, DIGIT_HEIGHT));
-  ones_minute = bitmap_layer_create(GRect(ONES_MINUTE_00, NORMAL_Y, 26, DIGIT_HEIGHT));
+  tens_hour = bitmap_layer_create(GRect(TENS_HOUR_ZERO_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT));
+  ones_hour = bitmap_layer_create(GRect(ONES_HOUR_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT)); // 44 when 1??
+  tens_minute = bitmap_layer_create(GRect(TENS_MINUTE_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT));
+  ones_minute = bitmap_layer_create(GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT));
   
   // loading the font and the colon_layer
   HBH_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_HBH_120));
