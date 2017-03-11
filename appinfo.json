@@ -6,6 +6,16 @@
     "resources": {
         "media": [
             {
+                "file": "images/blankTest.png",
+                "name": "BLANK_TEST",
+                "type": "png"
+            },
+            {
+                "file": "images/blankTest.png",
+                "name": "BLANK_TEXT",
+                "type": "png"
+            },
+            {
                 "file": "images/9.png",
                 "name": "N_9",
                 "type": "png"

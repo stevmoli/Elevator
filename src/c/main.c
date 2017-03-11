@@ -4,6 +4,7 @@
 
 Window *my_window;
 GBitmap *zero, *one, *two, *three, *four, *five, *six, *seven, *eight, *nine;
+GBitmap *blankTest; // TODO: delete this test
 TextLayer *text_colon_layer;
 static GFont HBH_font;
 TextLayer *background_layer;
@@ -37,6 +38,7 @@ const int ONES_MINUTE_ONE_ZERO = 96;
 const int ONES_MINUTE_ONE_ONE = 88;
 
 BitmapLayer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
+BitmapLayer *tens_hour_test, *ones_hour_test, *tens_minute_test, *ones_minute_test;  // TODO: remove these test layers
 
 // Values of these static ints are initialized in the main() method (only initializing them here)
 static int tens_hour_Xpos;
@@ -190,7 +192,8 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
   
   // ones digit of hours falls before changing
-  if ((seconds == 58) && (minutes == 59)) { 
+  if ((seconds == 58) && (minutes == 59)) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "ones digit of hours starts animation with xpos of %d", ones_hour_Xpos);
     GRect digit_start = GRect (ones_hour_Xpos, NORMAL_Y, 57, DIGIT_HEIGHT);
     GRect digit_finish = GRect (ones_hour_Xpos, LOW_Y, 57, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start, &digit_finish, 1850, 1);
@@ -207,6 +210,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   } else { 
     // now we will deal with the 12hr case
     if ((seconds == 58) && (minutes == 59) && ((hours == 9) || (hours == 12) || (hours == 21) || (hours == 0))) {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "tens digit of hours starts animation with xpos of %d", tens_hour_Xpos);
       GRect digit_start = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, HIGH_Y, 34, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1850, 1);
@@ -230,6 +234,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
   // ones digit of hours falls after changing
   if ((seconds == 0) && (minutes == 0)) { 
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "ones digit of hours ends animation with xpos of %d", ones_hour_Xpos);
     GRect digit_start = GRect (ones_hour_Xpos, HIGH_Y, 57, DIGIT_HEIGHT);
     GRect digit_finish = GRect (ones_hour_Xpos, NORMAL_Y, 57, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start, &digit_finish, 800, 100);
@@ -246,6 +251,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   } else { 
     // 12hr time
     if (((seconds == 0) && (minutes == 0)) && ((hours == 10) || (hours == 13) || (hours == 22) || (hours == 1))) {
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "tens digit of hours ends animation with xpos of %d", tens_hour_Xpos);
       GRect digit_start = GRect (tens_hour_Xpos, LOW_Y, 34, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 800, 1);
@@ -305,11 +311,13 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     // for if the ones place of the hour is a one (regardless of the tens place) when the face launches)
     if (ones_hour_Xpos == ONES_HOUR_ONE) {
       // move the tens place of the hour
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "format fix takes tens hours to %d", tens_hour_Xpos);
       GRect digit_start = GRect (TENS_HOUR_ZERO_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1000, 1);
       
       // move the ones place of the hour
+      APP_LOG(APP_LOG_LEVEL_DEBUG, "format fix takes ones hours to %d", ones_hour_Xpos);
       GRect digit_start_2 = GRect (ONES_HOUR_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT);
       GRect digit_finish_2 = GRect (ones_hour_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start_2, &digit_finish_2, 1000, 1);  
@@ -365,11 +373,20 @@ void window_load (Window *my_window) {
   eight = gbitmap_create_with_resource(RESOURCE_ID_N_8);
   nine = gbitmap_create_with_resource(RESOURCE_ID_N_9);
   
+  // TODO: delete this text layer
+  blankTest = gbitmap_create_with_resource(RESOURCE_ID_BLANK_TEST);
+  
   // creating the gbitmap layers
   tens_hour = bitmap_layer_create(GRect(TENS_HOUR_ZERO_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT));
-  ones_hour = bitmap_layer_create(GRect(ONES_HOUR_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT)); // 44 when 1??
+  ones_hour = bitmap_layer_create(GRect(ONES_HOUR_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT));
   tens_minute = bitmap_layer_create(GRect(TENS_MINUTE_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT));
   ones_minute = bitmap_layer_create(GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT));
+  
+  // TODO: delete these test layers
+  tens_hour_test = bitmap_layer_create(GRect(TENS_HOUR_ZERO_ZERO, NORMAL_Y-3, 2, 2));
+  ones_hour_test = bitmap_layer_create(GRect(ONES_HOUR_ZERO, NORMAL_Y-3, 2, 2));
+  tens_minute_test = bitmap_layer_create(GRect(TENS_MINUTE_ZERO, NORMAL_Y-3, 2, 2));
+  ones_minute_test = bitmap_layer_create(GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y-3, 2, 2));
   
   // loading the font and the colon_layer
   HBH_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_HBH_120));
@@ -390,6 +407,15 @@ void window_load (Window *my_window) {
   layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(tens_minute));
   layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(ones_minute));
   
+  // TODO: delete these test layers
+  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(tens_hour_test));
+  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(ones_hour_test));
+  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(tens_minute_test));
+  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(ones_minute_test));
+  bitmap_layer_set_bitmap(tens_hour_test, blankTest);
+  bitmap_layer_set_bitmap(ones_hour_test, blankTest);
+  bitmap_layer_set_bitmap(tens_minute_test, blankTest);
+  bitmap_layer_set_bitmap(ones_minute_test, blankTest);
   
   // preventing face from starting blank
   struct tm *t;
@@ -404,6 +430,12 @@ void window_unload (Window *my_window) {
   bitmap_layer_destroy(ones_hour);
   bitmap_layer_destroy(tens_minute);
   bitmap_layer_destroy(ones_minute);
+  
+  // TODO: remove these test layers
+  bitmap_layer_destroy(tens_hour_test);
+  bitmap_layer_destroy(ones_hour_test);
+  bitmap_layer_destroy(tens_minute_test);
+  bitmap_layer_destroy(ones_minute_test);
   
   text_layer_destroy(background_layer);
   text_layer_destroy(text_colon_layer);
