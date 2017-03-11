@@ -176,10 +176,32 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
   // Triggering the animations:
   
+  //// TEST LAYER ANIMATIONS - TODO: DELETE THESE ////
+  // 8 seconds before leave animations, we update the test images to be where the digits should leave from
+  // 1 second after return animation, we update test images to be where digits should return to
+  if ((seconds == 50) || (seconds == 1)) {
+    GRect digit_start0 = GRect(tens_hour_Xpos, NORMAL_Y-3, 2, 2);
+    GRect digit_finish0 = GRect(tens_hour_Xpos, NORMAL_Y-3, 2, 2);
+    animate_digit_layer(bitmap_layer_get_layer(tens_hour_test), &digit_start0, &digit_finish0, 300, 1);
+    
+    GRect digit_start1 = GRect(ones_hour_Xpos, NORMAL_Y-3, 2, 2);
+    GRect digit_finish1 = GRect(ones_hour_Xpos, NORMAL_Y-3, 2, 2);
+    animate_digit_layer(bitmap_layer_get_layer(ones_hour_test), &digit_start1, &digit_finish1, 300, 1);
+    
+    GRect digit_start2 = GRect(tens_minute_Xpos, NORMAL_Y-3, 2, 2);
+    GRect digit_finish2 = GRect(tens_minute_Xpos, NORMAL_Y-3, 2, 2);
+    animate_digit_layer(bitmap_layer_get_layer(tens_minute_test), &digit_start2, &digit_finish2, 300, 1);
+    
+    GRect digit_start3 = GRect(ones_minute_Xpos, NORMAL_Y-3, 2, 2);
+    GRect digit_finish3 = GRect(ones_minute_Xpos, NORMAL_Y-3, 2, 2);
+    animate_digit_layer(bitmap_layer_get_layer(ones_minute_test), &digit_start3, &digit_finish3, 300, 1);
+  }
+  //// END TEST LAYER ANIMATIONS ////
+  
   //PRE DIGIT CHANGE
   // ones digit of minutes falls before changing
   if (seconds == 58) { 
-    GRect digit_start = GRect(ones_minute_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);  // GOOD
+    GRect digit_start = GRect(ones_minute_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
     GRect digit_finish = GRect(ones_minute_Xpos, LOW_Y, 26, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start, &digit_finish, 1850, 1);
   }
