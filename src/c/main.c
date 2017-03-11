@@ -25,9 +25,9 @@ const int DIGIT_HEIGHT = 149;
 */
 const int TENS_HOUR_ZERO_ZERO = 4;
 const int TENS_HOUR_ZERO_ONE = 20;
-const int TENS_HOUR_ONE_ZERO = 20; // TODO: check this value, it's just a guess
+const int TENS_HOUR_ONE_ZERO = 12;
 const int TENS_HOUR_ONE_ONE = 28;
-const int ONES_HOUR_ZERO = 36; // TODO: check this value
+const int ONES_HOUR_ZERO = 36;
 const int ONES_HOUR_ONE = 44;
 const int TENS_MINUTE_ZERO = 81;
 const int TENS_MINUTE_ONE = 72;
