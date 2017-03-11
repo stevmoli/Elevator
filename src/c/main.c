@@ -25,10 +25,10 @@ const int DIGIT_HEIGHT = 149;
 */
 const int TENS_HOUR_ZERO_ZERO = 4;
 const int TENS_HOUR_ZERO_ONE = 20;
-const int TENS_HOUR_ONE_ZERO = 20; // TODO: check this value, it's just a guess
+const int TENS_HOUR_ONE_ZERO = 12;
 const int TENS_HOUR_ONE_ONE = 28;
-const int ONES_HOUR_ZERO = 36; // TODO: check this value
-const int ONES_HOUR_ONE = 52; // TODO: check this value, it's just a guess
+const int ONES_HOUR_ZERO = 36;
+const int ONES_HOUR_ONE = 44;
 const int TENS_MINUTE_ZERO = 81;
 const int TENS_MINUTE_ONE = 72;
 const int ONES_MINUTE_ZERO_ZERO = 113;
@@ -301,36 +301,42 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
   // Add one time animations to fix initial positioning when watchface starts
   if (format_needs_fix == true) {
+    
     // for if the ones place of the hour is a one (regardless of the tens place) when the face launches)
-    if ((tens_hour_Xpos == 20) || (tens_hour_Xpos == 28)) { 
-      GRect digit_start = GRect (4, NORMAL_Y, 26, DIGIT_HEIGHT);
-      GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
+    if (ones_hour_Xpos == ONES_HOUR_ONE) {
       // move the tens place of the hour
+      GRect digit_start = GRect (TENS_HOUR_ZERO_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT);
+      GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1000, 1);
-      GRect digit_start_2 = GRect (36, NORMAL_Y, 26, DIGIT_HEIGHT);
-      GRect digit_finish_2 = GRect (44, NORMAL_Y, 26, DIGIT_HEIGHT);
+      
       // move the ones place of the hour
+      GRect digit_start_2 = GRect (ONES_HOUR_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT);
+      GRect digit_finish_2 = GRect (ones_hour_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start_2, &digit_finish_2, 1000, 1);  
-    }
-    // TODO: use ones_hour_Xpos to put the functionality of the below if statement into the above one
+    
     // for if the tens place of the hour is a one and the ones place of the hour isn't
-    if (tens_hour_Xpos == 12) { 
-      GRect digit_start = GRect (11, NORMAL_Y, 26, DIGIT_HEIGHT);
+    } else if (tens_hour_Xpos == TENS_HOUR_ONE_ZERO) { 
+      GRect digit_start = GRect (TENS_HOUR_ZERO_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1000, 1);
     }
+    
     // for if the tens place of the minute is a one when the face launches
-    if (strncmp("1", &time_buffer[3], 1) == 0) { 
-      GRect digit_start = GRect(81, NORMAL_Y, 26, DIGIT_HEIGHT);
+    if (tens_minute_Xpos == TENS_MINUTE_ONE) {
+      // move the tens place of the minute
+      GRect digit_start = GRect(TENS_MINUTE_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT);
       GRect digit_finish = GRect(tens_minute_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 1000, 1);
       
-      GRect digit_start2 = GRect(113, NORMAL_Y, 26, DIGIT_HEIGHT);  // the ones place has to be moved accordingly too
+      // move the ones place of the minute
+      GRect digit_start2 = GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT);  // the ones place has to be moved accordingly too
       GRect digit_finish2 = GRect(ones_minute_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start2, &digit_finish2, 1000, 1);
-    } else if (strncmp("1", &time_buffer[4], 1) == 0) { 
+      
+    // for if the ones place of the minute is a one while the tens place isn't a one
+    } else if (ones_minute_Xpos == ONES_MINUTE_ZERO_ONE) { 
       // for if the ones place of the minute is a one when the face launches
-      GRect digit_start = GRect(113, NORMAL_Y, 26, DIGIT_HEIGHT);
+      GRect digit_start = GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT);
       GRect digit_finish = GRect(ones_minute_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 1000, 1);
     }
