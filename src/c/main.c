@@ -42,8 +42,8 @@ char ones_hour_string[] = "0";
 char tens_minute_string[] = "0";
 char ones_minute_string[] = "0";
 
-int long_hours_offset = 4;  //was 11
-int short_hours_offset = 9;
+int tens_hour_Xpos = TENS_HOUR_00;
+int ones_hour_Xpos = 9; // TODO: is this right?
 int long_minutes_offset = 81;
 int short_minutes_offset = 113;  // GOOD
 
@@ -111,29 +111,38 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   int hours = tick_time->tm_hour; // allowing for action when the hour changes
   int minutes = tick_time->tm_min;  // allowing for action when the minute changes
   int seconds = tick_time->tm_sec; // allowing for action when the second changes
-  
-  
-  // Dealing with font alignment when the digit 1 is used
+
+  ///// Dealing with digit alignment in cases when the digit 1 is used /////
+
+  /// Hours ///
+  // If ones place of hours is a 1:
   if (strncmp("1", &time_buffer[1], 1) == 0) { 
-    // handles tens place and ones place of hours when ones place is one
-    long_hours_offset = 20;
-    short_hours_offset = 9;
-  } else {
-    long_hours_offset = 11;
-    short_hours_offset = 10;
-  }
-  
-  // Handle cases where tens place of hours is a one:
-  if (strncmp("1", &time_buffer[0], 1) == 0) {
-    // If the ones place of hours is a one as well:
-    if (strncmp("1", &time_buffer[1], 1) == 0) {
-      long_hours_offset = 28;
+    ones_hour_Xpos = 9;
+
+    // If tens place of hours is a 1
+    if (strncmp("1", &time_buffer[0], 1) == 0) {
+      tens_hour_Xpos = 28;
+
+    // If tens place of hours isn't a 1
     } else {
-      // If ones place of hours isn't a one:
-      long_hours_offset = 12;
+      tens_hour_Xpos = 20;
+    }
+
+  // If ones place of hours isn't a 1
+  } else {
+    ones_hour_Xpos = 10;
+
+    // If tens place of hours is a 1
+    if (strncmp("1", &time_buffer[0], 1) == 0) {
+      tens_hour_Xpos = 12;
+    
+    // If tens place of hours isn't a 1
+    } else {
+      tens_hour_Xpos = 11;
     }
   }
-  
+
+  /// Minutes ///  
   if (strncmp("1", &time_buffer[3], 1) == 0) { // handles tens place of minutes when it is 1
     long_minutes_offset = 72; 
       if (strncmp("1", &time_buffer[4], 1) == 0) { // handles ones place of minutes
@@ -148,7 +157,8 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       } else {
         short_minutes_offset = long_minutes_offset + 32;
       }
-  }  
+  }
+  // TODO: ^ do I need to do something like this for hours?
   
   
   // Triggering the animations:
@@ -170,8 +180,8 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
   // ones digit of hours falls before changing
   if ((seconds == 58) && (minutes == 59)) { 
-    GRect digit_start = GRect (short_hours_offset, NORMAL_Y, 57, DIGIT_HEIGHT);
-    GRect digit_finish = GRect (short_hours_offset, LOW_Y, 57, DIGIT_HEIGHT);
+    GRect digit_start = GRect (ones_hour_Xpos, NORMAL_Y, 57, DIGIT_HEIGHT);
+    GRect digit_finish = GRect (ones_hour_Xpos, LOW_Y, 57, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start, &digit_finish, 1850, 1);
   }
   
@@ -179,15 +189,15 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   if (clock_is_24h_style() == true) { 
     // this handles 24hr time
     if ((seconds == 58) && (minutes == 59) && ((hours == 9) || (hours == 19) || (hours == 23))) { 
-      GRect digit_start = GRect (long_hours_offset, NORMAL_Y, 34, DIGIT_HEIGHT);
-      GRect digit_finish = GRect (long_hours_offset, HIGH_Y, 34, DIGIT_HEIGHT);
+      GRect digit_start = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
+      GRect digit_finish = GRect (tens_hour_Xpos, HIGH_Y, 34, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1850, 1);
     }
   } else { 
     // now we will deal with the 12hr case
     if ((seconds == 58) && (minutes == 59) && ((hours == 9) || (hours == 12) || (hours == 21) || (hours == 0))) {
-      GRect digit_start = GRect (long_hours_offset, NORMAL_Y, 34, DIGIT_HEIGHT);
-      GRect digit_finish = GRect (long_hours_offset, HIGH_Y, 34, DIGIT_HEIGHT);
+      GRect digit_start = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
+      GRect digit_finish = GRect (tens_hour_Xpos, HIGH_Y, 34, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1850, 1);
     }
   }
@@ -209,8 +219,8 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
   // ones digit of hours falls after changing
   if ((seconds == 0) && (minutes == 0)) { 
-    GRect digit_start = GRect (short_hours_offset, HIGH_Y, 57, DIGIT_HEIGHT);
-    GRect digit_finish = GRect (short_hours_offset, NORMAL_Y, 57, DIGIT_HEIGHT);
+    GRect digit_start = GRect (ones_hour_Xpos, HIGH_Y, 57, DIGIT_HEIGHT);
+    GRect digit_finish = GRect (ones_hour_Xpos, NORMAL_Y, 57, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start, &digit_finish, 800, 100);
   }
   
@@ -218,15 +228,15 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   if (clock_is_24h_style() == true) { 
     // 24hr time
     if ((seconds == 0) && (minutes == 0) && ((hours == 10) || (hours == 20) || (hours == 0))) { 
-      GRect digit_start = GRect (long_hours_offset, LOW_Y, 34, DIGIT_HEIGHT);
-      GRect digit_finish = GRect (long_hours_offset, NORMAL_Y, 34, DIGIT_HEIGHT);
+      GRect digit_start = GRect (tens_hour_Xpos, LOW_Y, 34, DIGIT_HEIGHT);
+      GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 800, 1);
     }
   } else { 
     // 12hr time
     if (((seconds == 0) && (minutes == 0)) && ((hours == 10) || (hours == 13) || (hours == 22) || (hours == 1))) {
-      GRect digit_start = GRect (long_hours_offset, LOW_Y, 34, DIGIT_HEIGHT);
-      GRect digit_finish = GRect (long_hours_offset, NORMAL_Y, 34, DIGIT_HEIGHT);
+      GRect digit_start = GRect (tens_hour_Xpos, LOW_Y, 34, DIGIT_HEIGHT);
+      GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 800, 1);
     }
   }
@@ -234,7 +244,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // Animating digit adjustment when a one appears in the hours ones place
   if (((hours == 1) || (hours == 11)) && (minutes == 0) && (seconds == 0)) {
       GRect digit_start = GRect (11, NORMAL_Y, 34, DIGIT_HEIGHT);
-      GRect digit_finish = GRect (long_hours_offset, NORMAL_Y, 34, DIGIT_HEIGHT);
+      GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);    
   }
   
@@ -242,14 +252,14 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   if (clock_is_24h_style() == false) { 
     if ((hours == 23) && (minutes == 0) && (seconds == 0)) {
       GRect digit_start = GRect (11, NORMAL_Y, 34, DIGIT_HEIGHT);
-      GRect digit_finish = GRect (long_hours_offset, NORMAL_Y, 34, DIGIT_HEIGHT);
+      GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);
     }
   } else { 
     // and dealing with 21:00
     if ((hours == 21) && (minutes == 0) && (seconds == 0)) {
       GRect digit_start = GRect (11, NORMAL_Y, 34, DIGIT_HEIGHT);
-      GRect digit_finish = GRect (long_hours_offset, NORMAL_Y, 34, DIGIT_HEIGHT);
+      GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);
     }
   }
@@ -257,7 +267,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // and moving the digit back when the one disappears from the hours ones place
   if (((hours == 2) || (hours == 12)) && (minutes == 0) && (seconds == 0)) {
     GRect digit_start = GRect (22, NORMAL_Y, 34, DIGIT_HEIGHT);
-    GRect digit_finish = GRect (long_hours_offset, NORMAL_Y, 34, DIGIT_HEIGHT);
+    GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);
   }
   
@@ -265,14 +275,14 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   if (clock_is_24h_style() == false) { 
     if (((hours == 0) || (hours == 14)) && (minutes == 0) && (seconds == 0)) {
     GRect digit_start = GRect (22, NORMAL_Y, 34, DIGIT_HEIGHT);
-    GRect digit_finish = GRect (long_hours_offset, NORMAL_Y, 34, DIGIT_HEIGHT);
+    GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);
     }
   } else { 
     // and dealing with 21:59 switching to 22:00
     if ((hours == 22) && (minutes == 0) && (seconds == 0)) {
     GRect digit_start = GRect (22, NORMAL_Y, 34, DIGIT_HEIGHT);
-    GRect digit_finish = GRect (long_hours_offset, NORMAL_Y, 34, DIGIT_HEIGHT);
+    GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);
     }
   }
@@ -280,9 +290,9 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // Add one time animations to fix initial positioning when watchface starts
   if (format_needs_fix == true) {
     // for if the ones place of the hour is a one (regardless of the tens place) when the face launches)
-    if ((long_hours_offset == 20) || (long_hours_offset == 28)) { 
+    if ((tens_hour_Xpos == 20) || (tens_hour_Xpos == 28)) { 
       GRect digit_start = GRect (4, NORMAL_Y, 26, DIGIT_HEIGHT);
-      GRect digit_finish = GRect (long_hours_offset, NORMAL_Y, 26, DIGIT_HEIGHT);
+      GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       // move the tens place of the hour
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1000, 1);
       GRect digit_start_2 = GRect (36, NORMAL_Y, 26, DIGIT_HEIGHT);
@@ -290,11 +300,11 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       // move the ones place of the hour
       animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start_2, &digit_finish_2, 1000, 1);  
     }
-    // TODO: use short_hours_offset to put the functionality of the below if statement into the above one
+    // TODO: use ones_hour_Xpos to put the functionality of the below if statement into the above one
     // for if the tens place of the hour is a one and the ones place of the hour isn't
-    if (long_hours_offset == 12) { 
+    if (tens_hour_Xpos == 12) { 
       GRect digit_start = GRect (11, NORMAL_Y, 26, DIGIT_HEIGHT);
-      GRect digit_finish = GRect (long_hours_offset, NORMAL_Y, 26, DIGIT_HEIGHT);
+      GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1000, 1);
     }
     // for if the tens place of the minute is a one when the face launches
