@@ -32,7 +32,7 @@ const int ONES_HOUR_ONE = 44;
 const int TENS_MINUTE_ZERO = 80;
 const int TENS_MINUTE_ONE = 72;
 const int ONES_MINUTE_ZERO_ZERO = 113;
-const int ONES_MINUTE_ZERO_ONE = 105;
+const int ONES_MINUTE_ZERO_ONE = 104;
 const int ONES_MINUTE_ONE_ZERO = 96;
 const int ONES_MINUTE_ONE_ONE = 88;
 
