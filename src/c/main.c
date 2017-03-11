@@ -43,10 +43,10 @@ char ones_hour_string[] = "0";
 char tens_minute_string[] = "0";
 char ones_minute_string[] = "0";
 
-int tens_hour_Xpos = TENS_HOUR_ZERO_ZERO;
-int ones_hour_Xpos = 9; // TODO: is this right?
-int long_minutes_offset = 81;
-int short_minutes_offset = 113;  // GOOD
+static int tens_hour_Xpos;// = TENS_HOUR_ZERO_ZERO;
+static int ones_hour_Xpos;// = 9; // TODO: is this right?
+static int long_minutes_offset;// = 81;
+static int short_minutes_offset;// = 113;  // GOOD
 
 bool format_needs_fix = true;
 
@@ -422,6 +422,10 @@ void handle_deinit(void) {
 }
 
 int main(void) {
+  tens_hour_Xpos = TENS_HOUR_ZERO_ZERO;
+  ones_hour_Xpos = 9; // TODO: is this right?
+  long_minutes_offset = 81;
+  short_minutes_offset = 113;  // GOOD
   handle_init();
   app_event_loop();
   handle_deinit();
