@@ -38,11 +38,6 @@ const int ONES_MINUTE_ONE_ONE = 88;
 
 BitmapLayer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
 
-char tens_hour_string[] = "0";
-char ones_hour_string[] = "0";
-char tens_minute_string[] = "0";
-char ones_minute_string[] = "0";
-
 // Values of these static ints are initialized in the main() method (only initializing them here)
 static int tens_hour_Xpos;
 static int ones_hour_Xpos;
@@ -52,26 +47,24 @@ static int ones_minute_Xpos;
 bool format_needs_fix = true;
 
 // Updates BitmapLayers with the correct digit images, based on the current time (digits passed in as digit_string)
-void image_update(char digit_string[], BitmapLayer *image){
-  int digit;
-  digit = atoi(digit_string);
-  if (digit == 0){
+void image_update(char digit, BitmapLayer *image){
+  if (strncmp("0", &digit, 1) == 0){
     bitmap_layer_set_bitmap(image, zero);
-  } else if (digit == 1){
+  } else if (strncmp("1", &digit, 1) == 0){
     bitmap_layer_set_bitmap(image, one);
-  } else if (digit == 2){
+  } else if (strncmp("2", &digit, 1) == 0){
     bitmap_layer_set_bitmap(image, two);
-  } else if (digit == 3){
+  } else if (strncmp("3", &digit, 1) == 0){
     bitmap_layer_set_bitmap(image, three);
-  } else if (digit == 4){
+  } else if (strncmp("4", &digit, 1) == 0){
     bitmap_layer_set_bitmap(image, four);
-  } else if (digit == 5){
+  } else if (strncmp("5", &digit, 1) == 0){
     bitmap_layer_set_bitmap(image, five);
-  } else if (digit == 6){
+  } else if (strncmp("6", &digit, 1) == 0){
     bitmap_layer_set_bitmap(image, six);
-  } else if (digit == 7){
+  } else if (strncmp("7", &digit, 1) == 0){
     bitmap_layer_set_bitmap(image, seven);
-  } else if (digit == 8){
+  } else if (strncmp("8", &digit, 1) == 0){
     bitmap_layer_set_bitmap(image, eight);
   } else {
     bitmap_layer_set_bitmap(image, nine);
@@ -113,18 +106,12 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   int hours = tick_time->tm_hour; // allowing for action when the hour changes
   int minutes = tick_time->tm_min;  // allowing for action when the minute changes
   int seconds = tick_time->tm_sec; // allowing for action when the second changes
-
-  // Getting current digits as strings
-  *tens_hour_string = time_buffer[0];
-  *ones_hour_string = time_buffer[1];
-  *tens_minute_string = time_buffer[3];
-  *ones_minute_string = time_buffer[4];
   
   // image layers updated with image_update method
-  image_update(tens_hour_string, tens_hour);
-  image_update(ones_hour_string, ones_hour);
-  image_update(tens_minute_string, tens_minute);
-  image_update(ones_minute_string, ones_minute);
+  image_update((char)time_buffer[0], tens_hour);
+  image_update((char)time_buffer[1], ones_hour);
+  image_update((char)time_buffer[3], tens_minute);
+  image_update((char)time_buffer[4], ones_minute);
 
   ///// Dealing with digit alignment in cases when the digit 1 is used /////
 
