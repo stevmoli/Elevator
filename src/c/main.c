@@ -338,7 +338,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       // for if the ones place of the minute is a one when the face launches
       GRect digit_start = GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT);
       GRect digit_finish = GRect(ones_minute_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
-      animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 1000, 1);
+      animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start, &digit_finish, 1000, 1);
     }
     format_needs_fix = false; 
   }
