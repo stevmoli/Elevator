@@ -10,6 +10,8 @@ TextLayer *background_layer;
 
 static char time_buffer[] = "00:00";
 static int NORMAL_Y = 8; // Normal y position of digits
+static int HIGH_Y = -150; // High y position of digits (for when above top of screen during animation)
+static int LOW_Y = 170; // Low y position of digits (for when below bottom of screen during animation)
 
 BitmapLayer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
 
@@ -133,21 +135,21 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // ones digit of minutes falls before changing
   if (seconds == 58) { 
     GRect digit_start = GRect(short_minutes_offset, NORMAL_Y, 26, 149);  // GOOD
-    GRect digit_finish = GRect(short_minutes_offset, 170, 26, 149);
+    GRect digit_finish = GRect(short_minutes_offset, LOW_Y, 26, 149);
     animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start, &digit_finish, 1850, 1);
   }
   
   // tens digit of minutes rises before changing
   if ((seconds == 58) && (strncmp("9", &time_buffer[4], 1) == 0)) { 
     GRect digit_start = GRect(long_minutes_offset, NORMAL_Y, 26, 149);
-    GRect digit_finish = GRect(long_minutes_offset, -150, 26, 149);
+    GRect digit_finish = GRect(long_minutes_offset, HIGH_Y, 26, 149);
     animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 1850, 1);
   }
   
   // ones digit of hours falls before changing
   if ((seconds == 58) && (minutes == 59)) { 
     GRect digit_start = GRect (short_hours_offset, 20, 57, 140);
-    GRect digit_finish = GRect (short_hours_offset, 170, 57, 140);
+    GRect digit_finish = GRect (short_hours_offset, LOW_Y, 57, 140);
     animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start, &digit_finish, 1850, 1);
   }
   
@@ -156,14 +158,14 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     // this handles 24hr time
     if ((seconds == 58) && (minutes == 59) && ((hours == 9) || (hours == 19) || (hours == 23))) { 
       GRect digit_start = GRect (long_hours_offset, 20, 34, 140);
-      GRect digit_finish = GRect (long_hours_offset, -150, 34, 140);
+      GRect digit_finish = GRect (long_hours_offset, HIGH_Y, 34, 140);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1850, 1);
     }
   } else { 
     // now we will deal with the 12hr case
     if ((seconds == 58) && (minutes == 59) && ((hours == 9) || (hours == 12) || (hours == 21) || (hours == 0))) {
       GRect digit_start = GRect (long_hours_offset, 20, 34, 140);
-      GRect digit_finish = GRect (long_hours_offset, -150, 34, 140);
+      GRect digit_finish = GRect (long_hours_offset, HIGH_Y, 34, 140);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1850, 1);
     }
   }
@@ -171,21 +173,21 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // POST DIGIT CHANGE
   // ones digit of minutes falls after changing
   if (seconds == 0) { 
-    GRect digit_start = GRect(short_minutes_offset, -150, 26, 149);  // GOOD
+    GRect digit_start = GRect(short_minutes_offset, HIGH_Y, 26, 149);  // GOOD
     GRect digit_finish = GRect(short_minutes_offset, NORMAL_Y, 26, 149);
     animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start, &digit_finish, 800, 1);
   }
   
   // tens digit of minutes rises after changing
   if ((seconds == 0) && (strncmp("0", &time_buffer[4], 1) == 0)) { 
-    GRect digit_start = GRect(long_minutes_offset, 170, 26, 149);
+    GRect digit_start = GRect(long_minutes_offset, LOW_Y, 26, 149);
     GRect digit_finish = GRect(long_minutes_offset, NORMAL_Y, 26, 149);
     animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 800, 100);
   }
   
   // ones digit of hours falls after changing
   if ((seconds == 0) && (minutes == 0)) { 
-    GRect digit_start = GRect (short_hours_offset, -150, 57, 140);
+    GRect digit_start = GRect (short_hours_offset, HIGH_Y, 57, 140);
     GRect digit_finish = GRect (short_hours_offset, 20, 57, 140);
     animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start, &digit_finish, 800, 100);
   }
@@ -194,14 +196,14 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   if (clock_is_24h_style() == true) { 
     // 24hr time
     if ((seconds == 0) && (minutes == 0) && ((hours == 10) || (hours == 20) || (hours == 0))) { 
-      GRect digit_start = GRect (long_hours_offset, 170, 34, 140);
+      GRect digit_start = GRect (long_hours_offset, LOW_Y, 34, 140);
       GRect digit_finish = GRect (long_hours_offset, 20, 34, 140);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 800, 1);
     }
   } else { 
     // 12hr time
     if (((seconds == 0) && (minutes == 0)) && ((hours == 10) || (hours == 13) || (hours == 22) || (hours == 1))) {
-      GRect digit_start = GRect (long_hours_offset, 170, 34, 140);
+      GRect digit_start = GRect (long_hours_offset, LOW_Y, 34, 140);
       GRect digit_finish = GRect (long_hours_offset, 20, 34, 140);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 800, 1);
     }
