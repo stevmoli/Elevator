@@ -11,5 +11,5 @@ The Elevator watchface displays the time in both 24hr and 12hr mode and uses "el
 The font used is called "Hauptbahnhof," which was created by Frédéric Rich and can be downloaded here: http://www.dafont.com/hauptbahnhof.font
 
 ## Todo:
-* Complete implementation of larger digits as images so that the face better utilizes the Pebble's screen size
+* ~~Complete implementation of larger digits as images so that the face better utilizes the Pebble's screen size~~
 * Add Basalt platform support and some customization options
