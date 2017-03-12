@@ -193,20 +193,20 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // 8 seconds before leave animations, we update the test images to be where the digits should leave from
   // 1 second after return animation, we update test images to be where digits should return to
   if ((seconds == 50) || (seconds == 1)) {
-    GRect digit_start0 = GRect(tens_hour_Xpos, NORMAL_Y-3, 2, 2);
-    GRect digit_finish0 = GRect(tens_hour_Xpos, NORMAL_Y-3, 2, 2);
+    GRect digit_start0 = GRect(tens_hour_Xpos, NORMAL_Y-3, 8, 2);
+    GRect digit_finish0 = GRect(tens_hour_Xpos, NORMAL_Y-3, 8, 2);
     animate_digit_layer(bitmap_layer_get_layer(tens_hour_test), &digit_start0, &digit_finish0, 300, 1);
     
-    GRect digit_start1 = GRect(ones_hour_Xpos, NORMAL_Y-3, 2, 2);
-    GRect digit_finish1 = GRect(ones_hour_Xpos, NORMAL_Y-3, 2, 2);
+    GRect digit_start1 = GRect(ones_hour_Xpos, NORMAL_Y-3, 8, 2);
+    GRect digit_finish1 = GRect(ones_hour_Xpos, NORMAL_Y-3, 8, 2);
     animate_digit_layer(bitmap_layer_get_layer(ones_hour_test), &digit_start1, &digit_finish1, 300, 1);
     
-    GRect digit_start2 = GRect(tens_minute_Xpos, NORMAL_Y-3, 2, 2);
-    GRect digit_finish2 = GRect(tens_minute_Xpos, NORMAL_Y-3, 2, 2);
+    GRect digit_start2 = GRect(tens_minute_Xpos, NORMAL_Y-3, 8, 2);
+    GRect digit_finish2 = GRect(tens_minute_Xpos, NORMAL_Y-3, 8, 2);
     animate_digit_layer(bitmap_layer_get_layer(tens_minute_test), &digit_start2, &digit_finish2, 300, 1);
     
-    GRect digit_start3 = GRect(ones_minute_Xpos, NORMAL_Y-3, 2, 2);
-    GRect digit_finish3 = GRect(ones_minute_Xpos, NORMAL_Y-3, 2, 2);
+    GRect digit_start3 = GRect(ones_minute_Xpos, NORMAL_Y-3, 8, 2);
+    GRect digit_finish3 = GRect(ones_minute_Xpos, NORMAL_Y-3, 8, 2);
     animate_digit_layer(bitmap_layer_get_layer(ones_minute_test), &digit_start3, &digit_finish3, 300, 1);
   }
   //// END TEST LAYER ANIMATIONS ////
@@ -411,20 +411,20 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     // 8 seconds before leave animations, we update the test images to be where the digits should leave from
     // 1 second after return animation, we update test images to be where digits should return to
     if ((seconds == 50) || (seconds == 1)) {
-      GRect digit_start0 = GRect(tens_hour_current_Xpos, NORMAL_Y-3, 2, 2);
-      GRect digit_finish0 = GRect(tens_hour_Xpos, NORMAL_Y-3, 2, 2);
+      GRect digit_start0 = GRect(tens_hour_current_Xpos, NORMAL_Y-3, 8, 2);
+      GRect digit_finish0 = GRect(tens_hour_Xpos, NORMAL_Y-3, 8, 2);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour_test), &digit_start0, &digit_finish0, 300, 1);
       
-      GRect digit_start1 = GRect(ones_hour_current_Xpos, NORMAL_Y-3, 2, 2);
-      GRect digit_finish1 = GRect(ones_hour_Xpos, NORMAL_Y-3, 2, 2);
+      GRect digit_start1 = GRect(ones_hour_current_Xpos, NORMAL_Y-3, 8, 2);
+      GRect digit_finish1 = GRect(ones_hour_Xpos, NORMAL_Y-3, 8, 2);
       animate_digit_layer(bitmap_layer_get_layer(ones_hour_test), &digit_start1, &digit_finish1, 300, 1);
       
-      GRect digit_start2 = GRect(tens_minute_current_Xpos, NORMAL_Y-3, 2, 2);
-      GRect digit_finish2 = GRect(tens_minute_Xpos, NORMAL_Y-3, 2, 2);
+      GRect digit_start2 = GRect(tens_minute_current_Xpos, NORMAL_Y-3, 8, 2);
+      GRect digit_finish2 = GRect(tens_minute_Xpos, NORMAL_Y-3, 8, 2);
       animate_digit_layer(bitmap_layer_get_layer(tens_minute_test), &digit_start2, &digit_finish2, 300, 1);
       
-      GRect digit_start3 = GRect(ones_minute_current_Xpos, NORMAL_Y-3, 2, 2);
-      GRect digit_finish3 = GRect(ones_minute_Xpos, NORMAL_Y-3, 2, 2);
+      GRect digit_start3 = GRect(ones_minute_current_Xpos, NORMAL_Y-3, 8, 2);
+      GRect digit_finish3 = GRect(ones_minute_Xpos, NORMAL_Y-3, 8, 2);
       animate_digit_layer(bitmap_layer_get_layer(ones_minute_test), &digit_start3, &digit_finish3, 300, 1);
     }
     //// END TEST LAYER ANIMATIONS ////
@@ -464,10 +464,10 @@ void window_load (Window *my_window) {
   ones_minute = bitmap_layer_create(GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT));
   
   // TODO: delete these test layers
-  tens_hour_test = bitmap_layer_create(GRect(TENS_HOUR_ZERO_ZERO, NORMAL_Y-3, 2, 2));
-  ones_hour_test = bitmap_layer_create(GRect(ONES_HOUR_ZERO, NORMAL_Y-3, 2, 2));
-  tens_minute_test = bitmap_layer_create(GRect(TENS_MINUTE_ZERO, NORMAL_Y-3, 2, 2));
-  ones_minute_test = bitmap_layer_create(GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y-3, 2, 2));
+  tens_hour_test = bitmap_layer_create(GRect(TENS_HOUR_ZERO_ZERO, NORMAL_Y-3, 8, 2));
+  ones_hour_test = bitmap_layer_create(GRect(ONES_HOUR_ZERO, NORMAL_Y-3, 8, 2));
+  tens_minute_test = bitmap_layer_create(GRect(TENS_MINUTE_ZERO, NORMAL_Y-3, 8, 2));
+  ones_minute_test = bitmap_layer_create(GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y-3, 8, 2));
   
   // loading the font and the colon_layer
   HBH_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_HBH_120));

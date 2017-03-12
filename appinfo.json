@@ -7,11 +7,6 @@
         "media": [
             {
                 "file": "images/blankTest.png",
-                "name": "BLANK_TEST",
-                "type": "png"
-            },
-            {
-                "file": "images/blankTest.png",
                 "name": "BLANK_TEXT",
                 "type": "png"
             },
