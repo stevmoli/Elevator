@@ -37,7 +37,6 @@ const int ONES_MINUTE_ONE_ZERO = 96;
 const int ONES_MINUTE_ONE_ONE = 96;
 
 BitmapLayer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
-BitmapLayer *tens_hour_test, *ones_hour_test, *tens_minute_test, *ones_minute_test;  // TODO: remove these test layers
 
 // Values of these static ints are first set in the main() method (only initializing them here)
 // These values aren't the current x positions of the digits; instead they are the target x positions for the next animation
