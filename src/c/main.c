@@ -26,27 +26,21 @@ const int DIGIT_HEIGHT = 149;
 */
 const int TENS_HOUR_ZERO_ZERO = 4;
 const int TENS_HOUR_ZERO_ONE = 20;
-const int TENS_HOUR_ONE_ZERO = 12;
-const int TENS_HOUR_ONE_ONE = 28;
+const int TENS_HOUR_ONE_ZERO = 20;
+const int TENS_HOUR_ONE_ONE = 36;
 const int ONES_HOUR_ZERO = 36;
-const int ONES_HOUR_ONE = 44;
+const int ONES_HOUR_ONE = 52;
 const int TENS_MINUTE_ZERO = 80;
-const int TENS_MINUTE_ONE = 72;
+const int TENS_MINUTE_ONE = 80;
 const int ONES_MINUTE_ZERO_ZERO = 113;
-const int ONES_MINUTE_ZERO_ONE = 104;
+const int ONES_MINUTE_ZERO_ONE = 112;
 const int ONES_MINUTE_ONE_ZERO = 96;
-const int ONES_MINUTE_ONE_ONE = 88;
+const int ONES_MINUTE_ONE_ONE = 96;
 
 BitmapLayer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
 BitmapLayer *tens_hour_test, *ones_hour_test, *tens_minute_test, *ones_minute_test;  // TODO: remove these test layers
 
 // Values of these static ints are first set in the main() method (only initializing them here)
-/*
-  A note about X positions: the GRects containing the digit images are all 26px wide.  Non-1 digits are 26px wide, which means that 
-  the X position of a GRect containing one of these digits will be the exact X position where this digit starts.  However, since the 
-  images for the 1 digit are only 10 px wide, a 1 digit actually is displayed 8 px to the right of its GRect's X position.
-  This is because the image is horizontally centered inside the GRect: 8px (space) + 10px (digit image) + 8 px (space) = 26px (GRect)
-*/
 // These values aren't the current x positions of the digits; instead they are the target x positions for the next animation
 static int tens_hour_Xpos;
 static int ones_hour_Xpos;
@@ -84,6 +78,10 @@ void image_update(char digit, BitmapLayer *image){
   } else {
     bitmap_layer_set_bitmap(image, nine);
   }
+  
+  // Align image of digits to the left of it's bitmap layer since it isn't always as wide as its containing bitmap layer
+  // This ensures that our X position values always work as intended, regardless of the width of a digit
+  bitmap_layer_set_alignment(image, GAlignLeft);
 }
 
 // destroying animations when stopped
@@ -230,7 +228,6 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
   // ones digit of hours falls before changing
   if ((seconds == 58) && (minutes == 59)) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "ones digit of hours starts animation with xpos of %d", ones_hour_Xpos);
     GRect digit_start = GRect (ones_hour_current_Xpos, NORMAL_Y, 57, DIGIT_HEIGHT);
     GRect digit_finish = GRect (ones_hour_Xpos, LOW_Y, 57, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start, &digit_finish, 1850, 1);
@@ -249,7 +246,6 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   } else { 
     // now we will deal with the 12hr case
     if ((seconds == 58) && (minutes == 59) && ((hours == 9) || (hours == 12) || (hours == 21) || (hours == 0))) {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "tens digit of hours starts animation with xpos of %d", tens_hour_Xpos);
       GRect digit_start = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, HIGH_Y, 34, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1850, 1);
@@ -276,7 +272,6 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
   // ones digit of hours falls after changing
   if ((seconds == 0) && (minutes == 0)) { 
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "ones digit of hours ends animation with xpos of %d", ones_hour_Xpos);
     GRect digit_start = GRect (ones_hour_current_Xpos, HIGH_Y, 57, DIGIT_HEIGHT);
     GRect digit_finish = GRect (ones_hour_Xpos, NORMAL_Y, 57, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start, &digit_finish, 800, 100);
@@ -295,7 +290,6 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   } else { 
     // 12hr time
     if (((seconds == 0) && (minutes == 0)) && ((hours == 10) || (hours == 13) || (hours == 22) || (hours == 1))) {
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "tens digit of hours ends animation with xpos of %d", tens_hour_Xpos);
       GRect digit_start = GRect (tens_hour_current_Xpos, LOW_Y, 34, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 34, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 800, 1);
@@ -363,14 +357,12 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     // for if the ones place of the hour is a one (regardless of the tens place) when the face launches)
     if (ones_hour_Xpos == ONES_HOUR_ONE) {
       // move the tens place of the hour
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "format fix takes tens hours to %d", tens_hour_Xpos);
       GRect digit_start = GRect (tens_hour_current_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1000, 1);
       tens_hour_current_Xpos = tens_hour_Xpos;
       
       // move the ones place of the hour
-      APP_LOG(APP_LOG_LEVEL_DEBUG, "format fix takes ones hours to %d", ones_hour_Xpos);
       GRect digit_start_2 = GRect (ones_hour_current_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       GRect digit_finish_2 = GRect (ones_hour_Xpos, NORMAL_Y, 26, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start_2, &digit_finish_2, 1000, 1);
@@ -540,6 +532,7 @@ void handle_deinit(void) {
 }
 
 int main(void) {
+  // set initial Xpos values
   tens_hour_Xpos = TENS_HOUR_ZERO_ZERO;
   ones_hour_Xpos = ONES_HOUR_ZERO;
   tens_minute_Xpos = TENS_MINUTE_ZERO;
