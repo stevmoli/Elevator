@@ -6,6 +6,12 @@
     "resources": {
         "media": [
             {
+                "file": "images/ElevatorMenuImage.png",
+                "menuIcon": true,
+                "name": "ELEVATOR_MENU_IMAGE",
+                "type": "png"
+            },
+            {
                 "file": "images/9.png",
                 "name": "N_9",
                 "type": "png"
@@ -67,7 +73,7 @@
     "shortName": "Elevator",
     "uuid": "5394d59c-3d78-42ae-8345-e3a2da942ffb",
     "versionCode": 1,
-    "versionLabel": "1.3",
+    "versionLabel": "2.0",
     "watchapp": {
         "watchface": true
     }
