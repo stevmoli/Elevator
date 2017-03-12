@@ -272,13 +272,12 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     }
 
     // ones digit of minutes
-    if (ones_minute_current_Ypos == LOW_Y) {
-      GRect digit_start = GRect(ones_minute_Xpos, HIGH_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-      GRect digit_finish = GRect(ones_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-      animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start, &digit_finish, 800, 1);
-      ones_minute_current_Xpos = ones_minute_Xpos;
-      ones_minute_current_Ypos = NORMAL_Y;
-    }
+    // runs every minute, so no conditional needed
+    GRect digit_start = GRect(ones_minute_Xpos, HIGH_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+    GRect digit_finish = GRect(ones_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+    animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start, &digit_finish, 800, 1);
+    ones_minute_current_Xpos = ones_minute_Xpos;
+    ones_minute_current_Ypos = NORMAL_Y;  // TODO: consider removing this Ypos altogether
   }
   
   /*
