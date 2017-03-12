@@ -4,7 +4,6 @@
 
 Window *my_window;
 GBitmap *zero, *one, *two, *three, *four, *five, *six, *seven, *eight, *nine;
-GBitmap *blankTest; // TODO: delete this test
 TextLayer *text_colon_layer;
 static GFont HBH_font;
 TextLayer *background_layer;
@@ -186,28 +185,6 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
   
   // Triggering the animations:
-  
-  //// TEST LAYER ANIMATIONS - TODO: DELETE THESE ////
-  // 8 seconds before leave animations, we update the test images to be where the digits should leave from
-  // 1 second after return animation, we update test images to be where digits should return to
-  if ((seconds == 50) || (seconds == 1)) {
-    GRect digit_start0 = GRect(tens_hour_Xpos, NORMAL_Y-3, 8, 2);
-    GRect digit_finish0 = GRect(tens_hour_Xpos, NORMAL_Y-3, 8, 2);
-    animate_digit_layer(bitmap_layer_get_layer(tens_hour_test), &digit_start0, &digit_finish0, 300, 1);
-    
-    GRect digit_start1 = GRect(ones_hour_Xpos, NORMAL_Y-3, 8, 2);
-    GRect digit_finish1 = GRect(ones_hour_Xpos, NORMAL_Y-3, 8, 2);
-    animate_digit_layer(bitmap_layer_get_layer(ones_hour_test), &digit_start1, &digit_finish1, 300, 1);
-    
-    GRect digit_start2 = GRect(tens_minute_Xpos, NORMAL_Y-3, 8, 2);
-    GRect digit_finish2 = GRect(tens_minute_Xpos, NORMAL_Y-3, 8, 2);
-    animate_digit_layer(bitmap_layer_get_layer(tens_minute_test), &digit_start2, &digit_finish2, 300, 1);
-    
-    GRect digit_start3 = GRect(ones_minute_Xpos, NORMAL_Y-3, 8, 2);
-    GRect digit_finish3 = GRect(ones_minute_Xpos, NORMAL_Y-3, 8, 2);
-    animate_digit_layer(bitmap_layer_get_layer(ones_minute_test), &digit_start3, &digit_finish3, 300, 1);
-  }
-  //// END TEST LAYER ANIMATIONS ////
   
   //PRE DIGIT CHANGE
   // ones digit of minutes falls before changing
@@ -398,29 +375,6 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start, &digit_finish, 1000, 1);
       ones_minute_current_Xpos = ones_minute_Xpos;
     }
-    
-    //// TEST LAYER ANIMATIONS - TODO: DELETE THESE ////
-    // 8 seconds before leave animations, we update the test images to be where the digits should leave from
-    // 1 second after return animation, we update test images to be where digits should return to
-    if ((seconds == 50) || (seconds == 1)) {
-      GRect digit_start0 = GRect(tens_hour_current_Xpos, NORMAL_Y-3, 8, 2);
-      GRect digit_finish0 = GRect(tens_hour_Xpos, NORMAL_Y-3, 8, 2);
-      animate_digit_layer(bitmap_layer_get_layer(tens_hour_test), &digit_start0, &digit_finish0, 300, 1);
-      
-      GRect digit_start1 = GRect(ones_hour_current_Xpos, NORMAL_Y-3, 8, 2);
-      GRect digit_finish1 = GRect(ones_hour_Xpos, NORMAL_Y-3, 8, 2);
-      animate_digit_layer(bitmap_layer_get_layer(ones_hour_test), &digit_start1, &digit_finish1, 300, 1);
-      
-      GRect digit_start2 = GRect(tens_minute_current_Xpos, NORMAL_Y-3, 8, 2);
-      GRect digit_finish2 = GRect(tens_minute_Xpos, NORMAL_Y-3, 8, 2);
-      animate_digit_layer(bitmap_layer_get_layer(tens_minute_test), &digit_start2, &digit_finish2, 300, 1);
-      
-      GRect digit_start3 = GRect(ones_minute_current_Xpos, NORMAL_Y-3, 8, 2);
-      GRect digit_finish3 = GRect(ones_minute_Xpos, NORMAL_Y-3, 8, 2);
-      animate_digit_layer(bitmap_layer_get_layer(ones_minute_test), &digit_start3, &digit_finish3, 300, 1);
-    }
-    //// END TEST LAYER ANIMATIONS ////
-    
     format_needs_fix = false; 
   }
   
@@ -446,20 +400,11 @@ void window_load (Window *my_window) {
   eight = gbitmap_create_with_resource(RESOURCE_ID_N_8);
   nine = gbitmap_create_with_resource(RESOURCE_ID_N_9);
   
-  // TODO: delete this text layer
-  blankTest = gbitmap_create_with_resource(RESOURCE_ID_BLANK_TEST);
-  
   // creating the gbitmap layers
   tens_hour = bitmap_layer_create(GRect(TENS_HOUR_ZERO_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT));
   ones_hour = bitmap_layer_create(GRect(ONES_HOUR_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT));
   tens_minute = bitmap_layer_create(GRect(TENS_MINUTE_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT));
   ones_minute = bitmap_layer_create(GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y, 26, DIGIT_HEIGHT));
-  
-  // TODO: delete these test layers
-  tens_hour_test = bitmap_layer_create(GRect(TENS_HOUR_ZERO_ZERO, NORMAL_Y-3, 8, 2));
-  ones_hour_test = bitmap_layer_create(GRect(ONES_HOUR_ZERO, NORMAL_Y-3, 8, 2));
-  tens_minute_test = bitmap_layer_create(GRect(TENS_MINUTE_ZERO, NORMAL_Y-3, 8, 2));
-  ones_minute_test = bitmap_layer_create(GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y-3, 8, 2));
   
   // loading the font and the colon_layer
   HBH_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_HBH_120));
@@ -480,16 +425,6 @@ void window_load (Window *my_window) {
   layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(tens_minute));
   layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(ones_minute));
   
-  // TODO: delete these test layers
-  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(tens_hour_test));
-  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(ones_hour_test));
-  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(tens_minute_test));
-  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(ones_minute_test));
-  bitmap_layer_set_bitmap(tens_hour_test, blankTest);
-  bitmap_layer_set_bitmap(ones_hour_test, blankTest);
-  bitmap_layer_set_bitmap(tens_minute_test, blankTest);
-  bitmap_layer_set_bitmap(ones_minute_test, blankTest);
-  
   // preventing face from starting blank
   struct tm *t;
   time_t temp;
@@ -503,12 +438,6 @@ void window_unload (Window *my_window) {
   bitmap_layer_destroy(ones_hour);
   bitmap_layer_destroy(tens_minute);
   bitmap_layer_destroy(ones_minute);
-  
-  // TODO: remove these test layers
-  bitmap_layer_destroy(tens_hour_test);
-  bitmap_layer_destroy(ones_hour_test);
-  bitmap_layer_destroy(tens_minute_test);
-  bitmap_layer_destroy(ones_minute_test);
   
   text_layer_destroy(background_layer);
   text_layer_destroy(text_colon_layer);
