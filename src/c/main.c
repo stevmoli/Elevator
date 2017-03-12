@@ -294,8 +294,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     // dealing with 11 PM
     if ( ((hours == 23) && (minutes == 0) && (seconds == 0)) ||
       // dealiing with 11 PM switching to midnight and 1 PM switching to 2 PM
-      
-      sdsd ) 
+      (((hours == 0) || (hours == 14)) && (minutes == 0) && (seconds == 0)) ) 
     {
       GRect digit_start = GRect (tens_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
