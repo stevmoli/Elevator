@@ -274,54 +274,45 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     }
   }
   
-  // Animating digit adjustment when a one appears in the hours ones place
   // TODO: Now that we use variables for starting x positions, see if we can combine some of these animations
     // Conditionals can be combined more
-  if (((hours == 1) || (hours == 11)) && (minutes == 0) && (seconds == 0)) {
+  /*
+    Digit slide animations: digits that aren't changing slide sideways to account for a digit next to them swapping
+    with a digit of a different width.
+  */
+  // Animating digit adjustment when a one appears in the hours ones place
+  if ( (((hours == 1) || (hours == 11)) && (minutes == 0) && (seconds == 0)) ||
+    // or moving the digit back when the one disappears from the hours ones place
+    (((hours == 2) || (hours == 12)) && (minutes == 0) && (seconds == 0)) ) 
+  {
     GRect digit_start = GRect (tens_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
     GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);
     tens_hour_current_Xpos = tens_hour_Xpos;
   }
   
-  // dealing with 11 PM
+  // 12hr-mode-specific animations:
   if (clock_is_24h_style() == false) { 
-    if ((hours == 23) && (minutes == 0) && (seconds == 0)) {
+    // dealing with 11 PM
+    if ( ((hours == 23) && (minutes == 0) && (seconds == 0)) ||
+      // dealiing with 11 PM switching to midnight and 1 PM switching to 2 PM
+      
+      sdsd ) 
+    {
       GRect digit_start = GRect (tens_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);
       tens_hour_current_Xpos = tens_hour_Xpos;
     }
-  } else { 
-    // and dealing with 21:00
-    if ((hours == 21) && (minutes == 0) && (seconds == 0)) {
-      GRect digit_start = GRect (tens_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-      GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-      animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);
-      tens_hour_current_Xpos = tens_hour_Xpos;
-    }
-  }
   
-  // and moving the digit back when the one disappears from the hours ones place
-  if (((hours == 2) || (hours == 12)) && (minutes == 0) && (seconds == 0)) {
-    GRect digit_start = GRect (tens_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-    GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-    animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);
-    tens_hour_current_Xpos = tens_hour_Xpos;
-  }
-  
-  // dealiing with 11 PM switching to midnight and 1 PM switching to 2 PM
-  if (clock_is_24h_style() == false) { 
-    if (((hours == 0) || (hours == 14)) && (minutes == 0) && (seconds == 0)) {
-      GRect digit_start = GRect (tens_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-      GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-      animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);
-      tens_hour_current_Xpos = tens_hour_Xpos;
-    }
+  // 24hr-mode-specific animations:
   } else { 
-    // and dealing with 21:59 switching to 22:00
-    if ((hours == 22) && (minutes == 0) && (seconds == 0)) {
-      GRect digit_start = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+    // dealing with 21:00
+    if (((hours == 21) && (minutes == 0) && (seconds == 0)) ||
+      // or dealing with 21:59 switching to 22:00
+      ((hours == 22) && (minutes == 0) && (seconds == 0)) ) 
+    {
+      GRect digit_start = GRect (tens_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);
       tens_hour_current_Xpos = tens_hour_Xpos;
