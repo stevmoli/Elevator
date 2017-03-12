@@ -274,8 +274,6 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     }
   }
   
-  // TODO: Now that we use variables for starting x positions, see if we can combine some of these animations
-    // Conditionals can be combined more
   /*
     Digit slide animations: digits that aren't changing slide sideways to account for a digit next to them swapping
     with a digit of a different width.
