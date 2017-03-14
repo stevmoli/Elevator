@@ -69,8 +69,12 @@
             }
         ]
     },
-    "sdkVersion": "2",
+    "sdkVersion": "3",
     "shortName": "Elevator",
+    "targetPlatforms": [
+        "aplite",
+        "basalt"
+    ],
     "uuid": "5394d59c-3d78-42ae-8345-e3a2da942ffb",
     "versionCode": 1,
     "versionLabel": "2.0",
