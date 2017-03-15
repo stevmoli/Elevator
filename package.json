@@ -6,12 +6,13 @@
     "pebble": {
         "displayName": "Elevator",
         "enableMultiJS": false,
-        "messageKeys": {},
+        "messageKeys": [],
         "projectType": "native",
         "resources": {
             "media": [
                 {
                     "file": "images/ElevatorMenuImage.png",
+                    "menuIcon": true,
                     "name": "ELEVATOR_MENU_IMAGE",
                     "targetPlatforms": null,
                     "type": "png"
