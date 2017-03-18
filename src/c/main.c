@@ -323,8 +323,9 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
 
   // Simple for cases where a digit might not return after leaving
+  // TODO: look for better solution
   if (seconds == 2) {
-    if ((tens_hour_Ypos != NORMAL_Y) || (tens_minute_current_Ypos != NORMAL_Y) || (ones_hour_current_Ypos != NORMAL_Y) || (ones_minute_current_Ypos != NORMAL_Y)) {
+    if ((tens_hour_current_Ypos != NORMAL_Y) || (tens_minute_current_Ypos != NORMAL_Y) || (ones_hour_current_Ypos != NORMAL_Y) || (ones_minute_current_Ypos != NORMAL_Y)) {
       format_needs_fix = true;
     }
   }
