@@ -12,5 +12,6 @@ The font used is called "Hauptbahnhof," which was created by Frédéric Rich and
 
 ## Todo:
 * ~~Complete implementation of larger digits as images so that the face better utilizes the Pebble's screen size~~
-* Test and release Version 2.0
-* Add Basalt platform support and some customization options
+* ~~Test and release Version 2.0~~
+* ~~Add Basalt platform support~~
+* Add some customization options
