@@ -38,7 +38,7 @@ const int ONES_MINUTE_ONE_ZERO = 96;
 const int ONES_MINUTE_ONE_ONE = 96;
 
 // declare prototype of function
-void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, int duration, int delay, bool returnRequired);
+void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, int duration, int delay);
 
 BitmapLayer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
 
