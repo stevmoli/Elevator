@@ -226,6 +226,8 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       same Xpos since it is next to the colon layer and all digits are left-aligned in their bitmap layers.
     */
     // TODO: there is no need to disinguish between ONES_MINUTE_ONE_ONE and ONES_MINUTE_ONE_ZERO.  Remove any duplicate constants like this
+    // TODO: get this code updating the future Xpos variables to always run when format-needs-fixing is true so variables are good when face launches
+    // TODO: hour digit future Xpos variables need setup
     // ones place of minute:
     if (minutes == 9) {
       ones_minute_future_Xpos = ONES_MINUTE_ONE_ZERO;
