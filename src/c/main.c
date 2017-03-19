@@ -56,10 +56,10 @@ static int tens_minute_current_Xpos;
 static int ones_minute_current_Xpos;
 
 // future_Xpos variables for cases where leaving digits will have to return at a new X position
-int tens_hour_future_Xpos = tens_hour_Xpos;
-int ones_hour_future_Xpos = ones_hour_Xpos;
-int tens_minute_future_Xpos = tens_minute_Xpos;
-int ones_minute_future_Xpos = ones_minute_Xpos;
+static int tens_hour_future_Xpos;
+static int ones_hour_future_Xpos;
+static int tens_minute_future_Xpos;
+static int ones_minute_future_Xpos;
 
 bool format_needs_fix = true;
 
@@ -228,7 +228,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     // ones place of minute:
     if (minutes == 9) {
       ones_minute_future_Xpos = ONES_MINUTE_ONE_ZERO;
-    } else if (minutes == 19)) {
+    } else if (minutes == 19) {
       ones_minute_future_Xpos = ONES_MINUTE_ZERO_ZERO; // TODO: confirm this is the only constant we'll want to refer to in this case (i.e. ONES_MINUTE_ZERO_ONE should be the same as this constant)
     }
 
