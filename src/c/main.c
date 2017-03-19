@@ -219,7 +219,6 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // Digit-change animations and future_Xpos variables code happens when seconds == 58
   if (seconds == 58) {
 
-
     /* 
       Check if any future X positions need an update.
       These updates are only needed if the Xpos of a returning digit must be different from that of
@@ -256,7 +255,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     }
     
     // ones digit of hours falls before changing
-    if ((minutes == 59) {
+    if (minutes == 59) {
       GRect digit_normal = GRect (ones_hour_Xpos, NORMAL_Y, 57, DIGIT_HEIGHT);
       GRect digit_low = GRect (ones_hour_Xpos, LOW_Y, 57, DIGIT_HEIGHT);
       GRect digit_high = GRect (ones_hour_future_Xpos, HIGH_Y, 57, DIGIT_HEIGHT);
