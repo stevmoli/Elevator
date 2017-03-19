@@ -216,15 +216,17 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     reset_future_X_positions();
   }
 
-  /* 
-    If seconds == 58 we check if any future X positions need an update.
-    These updates are only needed if the Xpos of a returning digit must be different from that of
-    when it was leaving.  This doesn't ever concern the ones_minute digit since it will always have the
-    same Xpos since it is next to the colon layer and all digits are left-aligned in their bitmap layers.
-  */
-  // TODO: there is no need to disinguish between ONES_MINUTE_ONE_ONE and ONES_MINUTE_ONE_ZERO.  Remove any duplicate constants like this
-  // TODO: check (seconds == 58) once and set a boolean based on the result so we only do this check only once per second
+  // Digit-change animations and future_Xpos variables code happens when seconds == 58
   if (seconds == 58) {
+
+
+    /* 
+      Check if any future X positions need an update.
+      These updates are only needed if the Xpos of a returning digit must be different from that of
+      when it was leaving.  This doesn't ever concern the ones_minute digit since it will always have the
+      same Xpos since it is next to the colon layer and all digits are left-aligned in their bitmap layers.
+    */
+    // TODO: there is no need to disinguish between ONES_MINUTE_ONE_ONE and ONES_MINUTE_ONE_ZERO.  Remove any duplicate constants like this
     // ones place of minute:
     if (minutes == 9) {
       ones_minute_future_Xpos = ONES_MINUTE_ONE_ZERO;
@@ -232,58 +234,53 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       ones_minute_future_Xpos = ONES_MINUTE_ZERO_ZERO; // TODO: confirm this is the only constant we'll want to refer to in this case (i.e. ONES_MINUTE_ZERO_ONE should be the same as this constant)
     }
 
-
-
-  }
-
   
-  // Triggering the animations:
-  
-  // DIGIT CHANGE (leave and return animations scheduled at once)
-  // ones digit of minutes falls before changing
-  if (seconds == 58) {
-    // Leave animation 
-    GRect digit_normal = GRect(ones_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-    GRect digit_low = GRect(ones_minute_Xpos, LOW_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-    GRect digit_high = GRect(ones_minute_future_Xpos, HIGH_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-    animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_normal, &digit_low, 1850, 1);
-    animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_high, &digit_normal, 800, 2000);
+    ///// Digit Change Animations (leave and return animations scheduled at once) (scheduled when the current second is 58) /////
+    // ones digit of minutes falls before changing
+    // different variables needed for this digit because of its scope (animations required everytime seconds == 58, so no need for another if statement here)
+    GRect digit_normal_ones_minute = GRect(ones_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+    GRect digit_low_ones_minute = GRect(ones_minute_Xpos, LOW_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+    GRect digit_high_ones_minute = GRect(ones_minute_future_Xpos, HIGH_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+    animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_normal_ones_minute, &digit_low_ones_minute, 1850, 1);
+    animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_high_ones_minute, &digit_normal_ones_minute, 800, 2000);
     ones_minute_current_Xpos = ones_minute_Xpos;
-  }
-  
-  // tens digit of minutes rises before changing
-  if ((seconds == 58) && (strncmp("9", &time_buffer[4], 1) == 0)) { 
-    GRect digit_normal = GRect(tens_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-    GRect digit_high = GRect(tens_minute_Xpos, HIGH_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-    GRect digit_low = GRect(tens_minute_future_Xpos, LOW_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-    animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_normal, &digit_high, 1850, 1);
-    animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_low, &digit_normal, 800, 2000);
-    tens_minute_current_Xpos = tens_minute_Xpos;
-  }
-  
-  // ones digit of hours falls before changing
-  if ((seconds == 58) && (minutes == 59)) {
-    GRect digit_normal = GRect (ones_hour_Xpos, NORMAL_Y, 57, DIGIT_HEIGHT);
-    GRect digit_low = GRect (ones_hour_Xpos, LOW_Y, 57, DIGIT_HEIGHT);
-    GRect digit_high = GRect (ones_hour_future_Xpos, HIGH_Y, 57, DIGIT_HEIGHT);
-    animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_normal, &digit_low, 1850, 1);
-    animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_high, &digit_normal, 800, 2000);
-    ones_hour_current_Xpos = ones_hour_Xpos;
-  }
-  
-  // tens digit of hours rises before changing (and according to 12hr or 24 hr time)
-  if (clock_is_24h_style() == true) { 
-    // this handles 24hr time
-    if ((seconds == 58) && (minutes == 59) && ((hours == 9) || (hours == 19) || (hours == 23))) { 
-      schedule_tens_hour_digit_change();
+    
+    // tens digit of minutes rises before changing
+    if (strncmp("9", &time_buffer[4], 1) == 0) { 
+      GRect digit_normal = GRect(tens_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+      GRect digit_high = GRect(tens_minute_Xpos, HIGH_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+      GRect digit_low = GRect(tens_minute_future_Xpos, LOW_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+      animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_normal, &digit_high, 1850, 1);
+      animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_low, &digit_normal, 800, 2000);
+      tens_minute_current_Xpos = tens_minute_Xpos;
     }
-  } else { 
-    // now we will deal with the 12hr case
-    if ((seconds == 58) && (minutes == 59) && ((hours == 9) || (hours == 12) || (hours == 21) || (hours == 0))) {
-      schedule_tens_hour_digit_change();
+    
+    // ones digit of hours falls before changing
+    if ((minutes == 59) {
+      GRect digit_normal = GRect (ones_hour_Xpos, NORMAL_Y, 57, DIGIT_HEIGHT);
+      GRect digit_low = GRect (ones_hour_Xpos, LOW_Y, 57, DIGIT_HEIGHT);
+      GRect digit_high = GRect (ones_hour_future_Xpos, HIGH_Y, 57, DIGIT_HEIGHT);
+      animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_normal, &digit_low, 1850, 1);
+      animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_high, &digit_normal, 800, 2000);
+      ones_hour_current_Xpos = ones_hour_Xpos;
+    }
+    
+    // tens digit of hours rises before changing (and according to 12hr or 24 hr time)
+    if (clock_is_24h_style() == true) { 
+      // this handles 24hr time
+      if ((minutes == 59) && ((hours == 9) || (hours == 19) || (hours == 23))) { 
+        schedule_tens_hour_digit_change();
+      }
+    } else { 
+      // now we will deal with the 12hr case
+      if ((minutes == 59) && ((hours == 9) || (hours == 12) || (hours == 21) || (hours == 0))) {
+        schedule_tens_hour_digit_change();
+      }
     }
   }
   
+  ///// Other Animations (not scheduled at second 58) /////
+
   /*
     Digit slide animations: digits that aren't changing slide sideways to account for a digit next to them swapping
     with a digit of a different width.
