@@ -321,6 +321,14 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       tens_hour_current_Xpos = tens_hour_Xpos;
     }
   }
+
+  // Simple for cases where a digit might not return after leaving
+  // TODO: look for better solution
+  if (seconds == 2) {
+    if ((tens_hour_current_Ypos != NORMAL_Y) || (tens_minute_current_Ypos != NORMAL_Y) || (ones_hour_current_Ypos != NORMAL_Y) || (ones_minute_current_Ypos != NORMAL_Y)) {
+      format_needs_fix = true;
+    }
+  }
   
   // Add one time animations to fix initial positioning when watchface starts
   if (format_needs_fix == true) {
