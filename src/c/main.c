@@ -32,7 +32,7 @@ const int ONES_HOUR_ZERO = 36;
 const int ONES_HOUR_ONE = 52;
 const int TENS_MINUTE_ZERO = 80;
 const int TENS_MINUTE_ONE = 80;
-const int ONES_MINUTE_ZERO_ZERO = 113;
+const int ONES_MINUTE_ZERO_ZERO = 113;  // TODO: confirm this one-pixel adjustment is right
 const int ONES_MINUTE_ZERO_ONE = 112;
 const int ONES_MINUTE_ONE_ZERO = 96;
 const int ONES_MINUTE_ONE_ONE = 96;
@@ -55,7 +55,21 @@ static int ones_hour_current_Xpos;
 static int tens_minute_current_Xpos;
 static int ones_minute_current_Xpos;
 
+// future_Xpos variables for cases where leaving digits will have to return at a new X position
+int tens_hour_future_Xpos = tens_hour_Xpos;
+int ones_hour_future_Xpos = ones_hour_Xpos;
+int tens_minute_future_Xpos = tens_minute_Xpos;
+int ones_minute_future_Xpos = ones_minute_Xpos;
+
 bool format_needs_fix = true;
+
+// Sets future_Xpos variables to Xpos variables
+void reset_future_X_positions() {
+  tens_hour_future_Xpos = tens_hour_Xpos;
+  ones_hour_future_Xpos = ones_hour_Xpos;
+  tens_minute_future_Xpos = tens_minute_Xpos;
+  ones_minute_future_Xpos = ones_minute_Xpos;
+}
 
 // Updates BitmapLayers with the correct digit images, based on the current time (digits passed in as digit_string)
 void image_update(char digit, BitmapLayer *image){
@@ -83,6 +97,7 @@ void image_update(char digit, BitmapLayer *image){
   
   // Align image of digits to the left of it's bitmap layer since it isn't always as wide as its containing bitmap layer
   // This ensures that our X position values always work as intended, regardless of the width of a digit
+  // TODO: consider aligning hours digit right so that we don't need as many different constants for digit positions
   bitmap_layer_set_alignment(image, GAlignLeft);
 }
 
@@ -92,7 +107,6 @@ void on_animation_stopped(Animation *anim, bool finished, void *context) {
 }
 
 // animating the time changes
-// returnRequired lets us know if this is a time-change animation removing a digit that will require a return animation
 void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, int duration, int delay) {
   PropertyAnimation *anim = property_animation_create_layer_frame(layer, digit_start, digit_finish);
   
@@ -114,7 +128,7 @@ void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, 
 void schedule_tens_hour_digit_change() {
   GRect digit_normal = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
   GRect digit_high = GRect (tens_hour_Xpos, HIGH_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-  GRect digit_low = GRect (tens_hour_Xpos, LOW_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+  GRect digit_low = GRect (tens_hour_future_Xpos, LOW_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
   animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_normal, &digit_high, 1850, 1);
   animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_low, &digit_normal, 800, 2000);
   tens_hour_current_Xpos = tens_hour_Xpos;
@@ -196,7 +210,32 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       ones_minute_Xpos = ONES_MINUTE_ZERO_ZERO;
     }
   }
-  
+
+  // Reset future X positions once a minute 
+  if (seconds == 0) {
+    reset_future_X_positions();
+  }
+
+  /* 
+    If seconds == 58 we check if any future X positions need an update.
+    These updates are only needed if the Xpos of a returning digit must be different from that of
+    when it was leaving.  This doesn't ever concern the ones_minute digit since it will always have the
+    same Xpos since it is next to the colon layer and all digits are left-aligned in their bitmap layers.
+  */
+  // TODO: there is no need to disinguish between ONES_MINUTE_ONE_ONE and ONES_MINUTE_ONE_ZERO.  Remove any duplicate constants like this
+  // TODO: check (seconds == 58) once and set a boolean based on the result so we only do this check only once per second
+  if (seconds == 58) {
+    // ones place of minute:
+    if (minutes == 9) {
+      ones_minute_future_Xpos = ONES_MINUTE_ONE_ZERO;
+    } else if (minutes == 19)) {
+      ones_minute_future_Xpos = ONES_MINUTE_ZERO_ZERO; // TODO: confirm this is the only constant we'll want to refer to in this case (i.e. ONES_MINUTE_ZERO_ONE should be the same as this constant)
+    }
+
+
+
+  }
+
   
   // Triggering the animations:
   
@@ -206,7 +245,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     // Leave animation 
     GRect digit_normal = GRect(ones_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
     GRect digit_low = GRect(ones_minute_Xpos, LOW_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-    GRect digit_high = GRect(ones_minute_Xpos, HIGH_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+    GRect digit_high = GRect(ones_minute_future_Xpos, HIGH_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_normal, &digit_low, 1850, 1);
     animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_high, &digit_normal, 800, 2000);
     ones_minute_current_Xpos = ones_minute_Xpos;
@@ -216,7 +255,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   if ((seconds == 58) && (strncmp("9", &time_buffer[4], 1) == 0)) { 
     GRect digit_normal = GRect(tens_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
     GRect digit_high = GRect(tens_minute_Xpos, HIGH_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
-    GRect digit_low = GRect(tens_minute_Xpos, LOW_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+    GRect digit_low = GRect(tens_minute_future_Xpos, LOW_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_normal, &digit_high, 1850, 1);
     animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_low, &digit_normal, 800, 2000);
     tens_minute_current_Xpos = tens_minute_Xpos;
@@ -226,7 +265,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   if ((seconds == 58) && (minutes == 59)) {
     GRect digit_normal = GRect (ones_hour_Xpos, NORMAL_Y, 57, DIGIT_HEIGHT);
     GRect digit_low = GRect (ones_hour_Xpos, LOW_Y, 57, DIGIT_HEIGHT);
-    GRect digit_high = GRect (ones_hour_Xpos, HIGH_Y, 57, DIGIT_HEIGHT);
+    GRect digit_high = GRect (ones_hour_future_Xpos, HIGH_Y, 57, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_normal, &digit_low, 1850, 1);
     animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_high, &digit_normal, 800, 2000);
     ones_hour_current_Xpos = ones_hour_Xpos;
@@ -429,6 +468,7 @@ int main(void) {
   ones_hour_current_Xpos = ONES_HOUR_ZERO;
   tens_minute_current_Xpos = TENS_MINUTE_ZERO;
   ones_minute_current_Xpos = ONES_MINUTE_ZERO_ZERO;
+  reset_future_X_positions();
   
   handle_init();
   app_event_loop();
