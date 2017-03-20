@@ -27,9 +27,9 @@ const int DIGIT_HEIGHT = 149;
 const int TENS_HOUR_ZERO_ZERO = 4;
 const int TENS_HOUR_ZERO_ONE = 20;
 const int TENS_HOUR_ONE_ZERO = 20;
-const int TENS_HOUR_ONE_ONE = 36;
+const int TENS_HOUR_ONE_ONE = 24;
 const int ONES_HOUR_ZERO = 36;
-const int ONES_HOUR_ONE = 52;
+const int ONES_HOUR_ONE = 36;
 const int TENS_MINUTE_ZERO = 80;
 const int TENS_MINUTE_ONE = 80;
 const int ONES_MINUTE_ZERO_ZERO = 113;  // TODO: confirm this one-pixel adjustment is right
@@ -98,7 +98,11 @@ void image_update(char digit, BitmapLayer *image){
   // Align image of digits to the left of it's bitmap layer since it isn't always as wide as its containing bitmap layer
   // This ensures that our X position values always work as intended, regardless of the width of a digit
   // TODO: consider aligning hours digit right so that we don't need as many different constants for digit positions
-  bitmap_layer_set_alignment(image, GAlignLeft);
+  if ((image == tens_hour) || (image == ones_hour)) {
+    bitmap_layer_set_alignment(image, GAlignRight);
+  } else {
+    bitmap_layer_set_alignment(image, GAlignLeft);
+  }
 }
 
 // destroying animations when stopped
