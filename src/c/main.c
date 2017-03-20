@@ -27,9 +27,9 @@ const int DIGIT_HEIGHT = 149;
 const int TENS_HOUR_ZERO_ZERO = 4;
 const int TENS_HOUR_ZERO_ONE = 20;
 const int TENS_HOUR_ONE_ZERO = 20;
-const int TENS_HOUR_ONE_ONE = 24;
+const int TENS_HOUR_ONE_ONE = 24;  // TODO: confirm
 const int ONES_HOUR_ZERO = 36;
-const int ONES_HOUR_ONE = 36;
+const int ONES_HOUR_ONE = 36; // TODO: confirm
 const int TENS_MINUTE_ZERO = 80;
 const int TENS_MINUTE_ONE = 80;
 const int ONES_MINUTE_ZERO_ZERO = 113;  // TODO: confirm this one-pixel adjustment is right
@@ -237,6 +237,30 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       ones_minute_future_Xpos = ONES_MINUTE_ONE_ZERO;
     } else if (minutes == 19) {
       ones_minute_future_Xpos = ONES_MINUTE_ZERO_ZERO; // TODO: confirm this is the only constant we'll want to refer to in this case (i.e. ONES_MINUTE_ZERO_ONE should be the same as this constant)
+    }
+
+    // tens place of hour:
+    if (minutes == 59) {
+      // 12 hr mode hour adjustments:
+      if (clock_is_24h_style() == false) {
+        // if 1 will be appearing in the ones place
+        if ((hours == 12) || (hours == 10)) {
+
+        // if 1 will be disappearing in the ones place
+        } else if ((hours == 1) || (hours == 11)) {
+
+        }
+
+      // 24 hr mode hour adjustments:
+      } else {
+        // if 1 will be appearing in the ones place
+        if ((hours == 0) || (hours == 10) || (hours == 20)) {
+
+        // if 1 will be disappearing in the ones place
+        } else if ((hours == 1) || (hours == 11) || (hours == 21)) {
+
+        }
+      }
     }
 
   
