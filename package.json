@@ -6,7 +6,7 @@
     "pebble": {
         "displayName": "Elevator",
         "enableMultiJS": false,
-        "messageKeys": {},
+        "messageKeys": [],
         "projectType": "native",
         "resources": {
             "media": [
