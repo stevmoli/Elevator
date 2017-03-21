@@ -25,11 +25,11 @@ const int DIGIT_HEIGHT = 149;
   its ones place positioned with ONES_MINUTE_AFTER_ONE.
 */
 const int TENS_HOUR_ZERO_ZERO = 4;
-const int TENS_HOUR_ONE_ZERO = 4; // TODO: confirm
+const int TENS_HOUR_ONE_ZERO = 4;
 const int TENS_HOUR_ZERO_ONE = 20;
-const int TENS_HOUR_ONE_ONE = 24;  // TODO: confirm
+const int TENS_HOUR_ONE_ONE = 20;
 const int ONES_HOUR_ZERO = 36;
-const int ONES_HOUR_ONE = 36; // TODO: confirm
+const int ONES_HOUR_ONE = 36;
 const int TENS_MINUTE = 80;
 const int ONES_MINUTE_AFTER_ZERO = 112;
 const int ONES_MINUTE_AFTER_ONE = 96;
