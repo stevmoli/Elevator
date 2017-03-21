@@ -240,6 +240,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     }
 
     // tens place of hour:
+    // TODO: set values inside these conditionals
     if (minutes == 59) {
       // 12 hr mode hour adjustments:
       if (clock_is_24h_style() == false) {
