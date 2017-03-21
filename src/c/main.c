@@ -16,13 +16,13 @@ const int LOW_Y = 170; // Low y position of digits (for when below bottom of scr
 const int DIGIT_WIDTH = 26;
 const int DIGIT_HEIGHT = 149;
 /* 
-  The below constant ints are the x position of the specified digit when the minute or hour digits match
+  The below constant ints are the x positions of the specified digit when the minute or hour digits match
   the format of the digits in the variable name. ONE represents a 1, ZERO represents any other digit.
   The tens place of the hour and ones place of the minutes can be offset by the ones place of the hour
-  and tens place of the minute, respectively, so these digits require formats including both digits.
+  and tens place of the minute, respectively, so these digits require formats relative to the other digit.
   I.E., the hour "12" would have its tens place positioned with TENS_HOUR_ONE_ZERO and ones place positioned
-  with ONES_HOUR_ZERO, while the minute "12" would have its tens place positioned with TENS_MINUTE_ONE and 
-  its ones place positioned with ONES_MINUTE_ONE_ZERO
+  with ONES_HOUR_ZERO, while the minute "12" would have its tens place positioned with TENS_MINUTE and 
+  its ones place positioned with ONES_MINUTE_AFTER_ONE.
 */
 const int TENS_HOUR_ZERO_ZERO = 4;
 const int TENS_HOUR_ZERO_ONE = 20;
@@ -30,12 +30,9 @@ const int TENS_HOUR_ONE_ZERO = 20;
 const int TENS_HOUR_ONE_ONE = 24;  // TODO: confirm
 const int ONES_HOUR_ZERO = 36;
 const int ONES_HOUR_ONE = 36; // TODO: confirm
-const int TENS_MINUTE_ZERO = 80;
-const int TENS_MINUTE_ONE = 80;
-const int ONES_MINUTE_ZERO_ZERO = 112;  // TODO: confirm this one-pixel adjustment is right
-const int ONES_MINUTE_ZERO_ONE = 112;
-const int ONES_MINUTE_ONE_ZERO = 96;
-const int ONES_MINUTE_ONE_ONE = 96;
+const int TENS_MINUTE = 80;
+const int ONES_MINUTE_AFTER_ZERO = 112;
+const int ONES_MINUTE_AFTER_ONE = 96;
 
 // declare prototype of function
 void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, int duration, int delay);
@@ -188,31 +185,14 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
 
   /// Minutes ///  
+    tens_minute_Xpos = TENS_MINUTE; // TODO: confirm we never need to set this, and remove it altogether
   // If tens place of minutes is a 1
   if (strncmp("1", &time_buffer[3], 1) == 0) {
-    tens_minute_Xpos = TENS_MINUTE_ONE; 
-
-    // If ones place of minutes is a 1
-    if (strncmp("1", &time_buffer[4], 1) == 0) {
-      ones_minute_Xpos = ONES_MINUTE_ONE_ONE;
-
-    // If ones place of minutes isn't a 1
-    } else {
-      ones_minute_Xpos = ONES_MINUTE_ONE_ZERO;
-    }
+    ones_minute_Xpos = ONES_MINUTE_AFTER_ONE;
 
   // If tens place of minutes isn't a 1
   } else {
-    tens_minute_Xpos = TENS_MINUTE_ZERO;
-
-    // If ones place of minutes is a 1
-    if (strncmp("1", &time_buffer[4], 1) == 0) {
-      ones_minute_Xpos = ONES_MINUTE_ZERO_ONE;
-    
-    // If ones place of minutes isn't a 1
-    } else {
-      ones_minute_Xpos = ONES_MINUTE_ZERO_ZERO;
-    }
+    ones_minute_Xpos = ONES_MINUTE_AFTER_ZERO;
   }
 
   // Reset future X positions once a minute 
@@ -229,14 +209,13 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       when it was leaving.  This doesn't ever concern the ones_minute digit since it will always have the
       same Xpos since it is next to the colon layer and all digits are left-aligned in their bitmap layers.
     */
-    // TODO: there is no need to disinguish between ONES_MINUTE_ONE_ONE and ONES_MINUTE_ONE_ZERO.  Remove any duplicate constants like this
     // TODO: get this code updating the future Xpos variables to always run when format-needs-fixing is true so variables are good when face launches
     // TODO: hour digit future Xpos variables need setup
     // ones place of minute:
     if (minutes == 9) {
-      ones_minute_future_Xpos = ONES_MINUTE_ONE_ZERO;
+      ones_minute_future_Xpos = ONES_MINUTE_AFTER_ONE;
     } else if (minutes == 19) {
-      ones_minute_future_Xpos = ONES_MINUTE_ZERO_ZERO; // TODO: confirm this is the only constant we'll want to refer to in this case (i.e. ONES_MINUTE_ZERO_ONE should be the same as this constant)
+      ones_minute_future_Xpos = ONES_MINUTE_AFTER_ZERO;
     }
 
     // tens place of hour:
@@ -378,8 +357,8 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       tens_hour_current_Xpos = tens_hour_Xpos;
     }
     
-    // for if the tens place of the minute is a one when the face launches
-    if (tens_minute_Xpos == TENS_MINUTE_ONE) {
+    // for if the tens place of the minute is out of place (somehow) when the face launches
+    if (tens_minute_Xpos != TENS_MINUTE) {
       // move the tens place of the minute
       GRect digit_start = GRect(tens_minute_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish = GRect(tens_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
@@ -392,8 +371,9 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start2, &digit_finish2, 1000, 1);
       ones_minute_current_Xpos = ones_minute_Xpos;
       
-    // for if the ones place of the minute is a one while the tens place isn't a one
-    } else if (ones_minute_Xpos == ONES_MINUTE_ZERO_ONE) { 
+    // for if the tens place of the minute is a one
+    // TODO: have tens_hours and ones_minute spawn at their old, pre-centering positions so we still get the format-fix animations on launch.  This conditional needs changing though since we're now using ONES_MINUTE_AFTER_ZERO
+    } else if (ones_minute_Xpos == ONES_MINUTE_AFTER_ONE) { 
       // for if the ones place of the minute is a one when the face launches
       GRect digit_start = GRect(ones_minute_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish = GRect(ones_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
@@ -426,10 +406,11 @@ void window_load (Window *my_window) {
   nine = gbitmap_create_with_resource(RESOURCE_ID_N_9);
   
   // creating the gbitmap layers
-  tens_hour = bitmap_layer_create(GRect(TENS_HOUR_ZERO_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
+  // hard-coded X positions allow for sliding animations for 1's on app launch
+  tens_hour = bitmap_layer_create(GRect(4, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
   ones_hour = bitmap_layer_create(GRect(ONES_HOUR_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
-  tens_minute = bitmap_layer_create(GRect(TENS_MINUTE_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
-  ones_minute = bitmap_layer_create(GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
+  tens_minute = bitmap_layer_create(GRect(TENS_MINUTE, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
+  ones_minute = bitmap_layer_create(GRect(112, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
   
   // loading the font and the colon_layer
   HBH_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_HBH_120));
@@ -487,14 +468,10 @@ void handle_deinit(void) {
 
 int main(void) {
   // set initial Xpos values and Ypos values
-  tens_hour_Xpos = TENS_HOUR_ZERO_ZERO;
-  ones_hour_Xpos = ONES_HOUR_ZERO;
-  tens_minute_Xpos = TENS_MINUTE_ZERO;
-  ones_minute_Xpos = ONES_MINUTE_ZERO_ZERO;
-  tens_hour_current_Xpos = TENS_HOUR_ZERO_ZERO;
-  ones_hour_current_Xpos = ONES_HOUR_ZERO;
-  tens_minute_current_Xpos = TENS_MINUTE_ZERO;
-  ones_minute_current_Xpos = ONES_MINUTE_ZERO_ZERO;
+  tens_hour_Xpos = tens_hour_current_Xpos = TENS_HOUR_ZERO_ZERO;
+  ones_hour_Xpos = ones_hour_current_Xpos = ONES_HOUR_ZERO;
+  tens_minute_Xpos = tens_minute_current_Xpos = TENS_MINUTE;
+  ones_minute_Xpos = ones_minute_current_Xpos = ONES_MINUTE_AFTER_ZERO;
   reset_future_X_positions();
   
   handle_init();
