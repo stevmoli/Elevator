@@ -2,7 +2,7 @@
 
 ## A watchface for the Pebble smartwatch
 
-![Elevator Screenshot](/screenshots/Elevator_screenshot_1.png)
+![Elevator Screenshot](/store-assets//banners/ElevatorMarketingBanner.png)
 
 Pebble App Store Link: https://apps.getpebble.com/applications/54c41fc3a64480d5f50000c7
 
