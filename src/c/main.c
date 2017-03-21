@@ -24,6 +24,7 @@ const int DIGIT_HEIGHT = 149;
   with ONES_HOUR, while the minute "12" would have its tens place positioned with TENS_MINUTE and 
   its ones place positioned with ONES_MINUTE_AFTER_ONE.
 */
+// TODO: only two constants for tens hour 
 const int TENS_HOUR_ZERO_ZERO = 4;
 const int TENS_HOUR_ONE_ZERO = 4;
 const int TENS_HOUR_ZERO_ONE = 20;
