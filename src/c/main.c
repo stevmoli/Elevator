@@ -25,8 +25,8 @@ const int DIGIT_HEIGHT = 149;
   its ones place positioned with ONES_MINUTE_AFTER_ONE.
 */
 const int TENS_HOUR_ZERO_ZERO = 4;
+const int TENS_HOUR_ONE_ZERO = 4; // TODO: confirm
 const int TENS_HOUR_ZERO_ONE = 20;
-const int TENS_HOUR_ONE_ZERO = 20;
 const int TENS_HOUR_ONE_ONE = 24;  // TODO: confirm
 const int ONES_HOUR_ZERO = 36;
 const int ONES_HOUR_ONE = 36; // TODO: confirm
@@ -94,7 +94,6 @@ void image_update(char digit, BitmapLayer *image){
   
   // Align image of digits to the left of it's bitmap layer since it isn't always as wide as its containing bitmap layer
   // This ensures that our X position values always work as intended, regardless of the width of a digit
-  // TODO: consider aligning hours digit right so that we don't need as many different constants for digit positions
   if ((image == tens_hour) || (image == ones_hour)) {
     bitmap_layer_set_alignment(image, GAlignRight);
   } else {
@@ -185,7 +184,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
 
   /// Minutes ///  
-    tens_minute_Xpos = TENS_MINUTE; // TODO: confirm we never need to set this, and remove it altogether
+  tens_minute_Xpos = TENS_MINUTE; // TODO: confirm we never need to set this, and remove it altogether
   // If tens place of minutes is a 1
   if (strncmp("1", &time_buffer[3], 1) == 0) {
     ones_minute_Xpos = ONES_MINUTE_AFTER_ONE;
@@ -372,7 +371,6 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       ones_minute_current_Xpos = ones_minute_Xpos;
       
     // for if the tens place of the minute is a one
-    // TODO: have tens_hours and ones_minute spawn at their old, pre-centering positions so we still get the format-fix animations on launch.  This conditional needs changing though since we're now using ONES_MINUTE_AFTER_ZERO
     } else if (ones_minute_Xpos == ONES_MINUTE_AFTER_ONE) { 
       // for if the ones place of the minute is a one when the face launches
       GRect digit_start = GRect(ones_minute_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
