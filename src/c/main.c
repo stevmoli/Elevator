@@ -20,15 +20,12 @@ const int DIGIT_HEIGHT = 149;
   the format of the digits in the variable name. ONE represents a 1, ZERO represents any other digit.
   The tens place of the hour and ones place of the minutes can be offset by the ones place of the hour
   and tens place of the minute, respectively, so these digits require formats relative to the other digit.
-  I.E., the hour "12" would have its tens place positioned with TENS_HOUR_ONE_ZERO and ones place positioned
+  I.E., the hour "12" would have its tens place positioned with TENS_HOUR_BEFORE_ZERO and ones place positioned
   with ONES_HOUR, while the minute "12" would have its tens place positioned with TENS_MINUTE and 
   its ones place positioned with ONES_MINUTE_AFTER_ONE.
 */
-// TODO: only two constants for tens hour 
-const int TENS_HOUR_ZERO_ZERO = 4;
-const int TENS_HOUR_ONE_ZERO = 4;
-const int TENS_HOUR_ZERO_ONE = 20;
-const int TENS_HOUR_ONE_ONE = 20;
+const int TENS_HOUR_BEFORE_ZERO = 4;
+const int TENS_HOUR_BEFORE_ONE = 20;
 const int ONES_HOUR = 36;
 const int TENS_MINUTE = 80;
 const int ONES_MINUTE_AFTER_ZERO = 112;
@@ -159,26 +156,11 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   ones_hour_Xpos = ONES_HOUR;  // TODO: confirm we never need to set this, and remove it altogether
   // If ones place of hours is a 1:
   if (strncmp("1", &time_buffer[1], 1) == 0) { 
-
-    // If tens place of hours is a 1
-    if (strncmp("1", &time_buffer[0], 1) == 0) {
-      tens_hour_Xpos = TENS_HOUR_ONE_ONE;
-
-    // If tens place of hours isn't a 1
-    } else {
-      tens_hour_Xpos = TENS_HOUR_ZERO_ONE;
-    }
+    tens_hour_Xpos = TENS_HOUR_BEFORE_ONE;
 
   // If ones place of hours isn't a 1
   } else {
-    // If tens place of hours is a 1
-    if (strncmp("1", &time_buffer[0], 1) == 0) {
-      tens_hour_Xpos = TENS_HOUR_ONE_ZERO;
-    
-    // If tens place of hours isn't a 1
-    } else {
-      tens_hour_Xpos = TENS_HOUR_ZERO_ZERO;
-    }
+    tens_hour_Xpos = TENS_HOUR_BEFORE_ZERO;
   }
 
   /// Minutes ///  
@@ -330,6 +312,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   }
   
   // Add one time animations to fix initial positioning when watchface starts
+  // TODO: confirm each of these animations work as intended
   if (format_needs_fix == true) {
     
     // for if the ones place of the hour is out of place (somehow) when the face launches)
@@ -341,13 +324,14 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       tens_hour_current_Xpos = tens_hour_Xpos;
       
       // move the ones place of the hour
+      // TODO: can probably remove this
       GRect digit_start_2 = GRect (ones_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish_2 = GRect (ones_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start_2, &digit_finish_2, 1000, 1);
       ones_hour_current_Xpos = ones_hour_Xpos;
     
-    // for if the tens place of the hour is a one and the ones place of the hour isn't
-    } else if (tens_hour_Xpos == TENS_HOUR_ONE_ZERO) { 
+    // for if the ones place of the hour is a one
+    } else if (tens_hour_Xpos == TENS_HOUR_BEFORE_ONE) { 
       GRect digit_start = GRect (tens_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1000, 1);
@@ -363,6 +347,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       tens_minute_current_Xpos = tens_minute_Xpos;
       
       // move the ones place of the minute
+      // TODO: can probably remove this
       GRect digit_start2 = GRect(ones_minute_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish2 = GRect(ones_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start2, &digit_finish2, 1000, 1);
@@ -370,7 +355,6 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       
     // for if the tens place of the minute is a one
     } else if (ones_minute_Xpos == ONES_MINUTE_AFTER_ONE) { 
-      // for if the ones place of the minute is a one when the face launches
       GRect digit_start = GRect(ones_minute_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish = GRect(ones_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start, &digit_finish, 1000, 1);
@@ -464,7 +448,7 @@ void handle_deinit(void) {
 
 int main(void) {
   // set initial Xpos values and Ypos values
-  tens_hour_Xpos = tens_hour_current_Xpos = TENS_HOUR_ZERO_ZERO;
+  tens_hour_Xpos = tens_hour_current_Xpos = TENS_HOUR_BEFORE_ZERO;
   ones_hour_Xpos = ones_hour_current_Xpos = ONES_HOUR;
   tens_minute_Xpos = tens_minute_current_Xpos = TENS_MINUTE;
   ones_minute_Xpos = ones_minute_current_Xpos = ONES_MINUTE_AFTER_ZERO;
