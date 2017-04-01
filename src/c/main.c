@@ -66,24 +66,24 @@ void reset_future_X_positions() {
 }
 
 // Updates BitmapLayers with the correct digit images, based on the current time (digits passed in as digit_string)
-void image_update(char digit, BitmapLayer *image){
+void image_update(char digit, BitmapLayer *image) {
   if (strncmp("0", &digit, 1) == 0){
     bitmap_layer_set_bitmap(image, zero);
-  } else if (strncmp("1", &digit, 1) == 0){
+  } else if (strncmp("1", &digit, 1) == 0) {
     bitmap_layer_set_bitmap(image, one);
-  } else if (strncmp("2", &digit, 1) == 0){
+  } else if (strncmp("2", &digit, 1) == 0) {
     bitmap_layer_set_bitmap(image, two);
-  } else if (strncmp("3", &digit, 1) == 0){
+  } else if (strncmp("3", &digit, 1) == 0) {
     bitmap_layer_set_bitmap(image, three);
-  } else if (strncmp("4", &digit, 1) == 0){
+  } else if (strncmp("4", &digit, 1) == 0) {
     bitmap_layer_set_bitmap(image, four);
-  } else if (strncmp("5", &digit, 1) == 0){
+  } else if (strncmp("5", &digit, 1) == 0) {
     bitmap_layer_set_bitmap(image, five);
-  } else if (strncmp("6", &digit, 1) == 0){
+  } else if (strncmp("6", &digit, 1) == 0) {
     bitmap_layer_set_bitmap(image, six);
-  } else if (strncmp("7", &digit, 1) == 0){
+  } else if (strncmp("7", &digit, 1) == 0) {
     bitmap_layer_set_bitmap(image, seven);
-  } else if (strncmp("8", &digit, 1) == 0){
+  } else if (strncmp("8", &digit, 1) == 0) {
     bitmap_layer_set_bitmap(image, eight);
   } else {
     bitmap_layer_set_bitmap(image, nine);
