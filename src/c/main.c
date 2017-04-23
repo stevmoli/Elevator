@@ -1,6 +1,7 @@
 #include <pebble.h>
 #include <stdio.h>
 #include <string.h>
+#include <pebble-time-machine/pebble-time-machine.h>
 
 Window *my_window;
 GBitmap *zero, *one, *two, *three, *four, *five, *six, *seven, *eight, *nine;
@@ -15,13 +16,13 @@ const int HIGH_Y = -150; // High y position of digits (for when above top of scr
 const int LOW_Y = 170; // Low y position of digits (for when below bottom of screen during animation)
 const int DIGIT_WIDTH = 26;
 const int DIGIT_HEIGHT = 149;
-/* 
+/*
   The below constant ints are the x positions of the specified digit when the minute or hour digits match
   the format of the digits in the variable name. ONE represents a 1, ZERO represents any other digit.
   The tens place of the hour and ones place of the minutes can be offset by the ones place of the hour
   and tens place of the minute, respectively, so these digits require formats relative to the other digit.
   I.E., the hour "12" would have its tens place positioned with TENS_HOUR_BEFORE_ZERO and ones place positioned
-  with ONES_HOUR, while the minute "12" would have its tens place positioned with TENS_MINUTE and 
+  with ONES_HOUR, while the minute "12" would have its tens place positioned with TENS_MINUTE and
   its ones place positioned with ONES_MINUTE_AFTER_ONE.
 */
 const int TENS_HOUR_BEFORE_ZERO = 4;
@@ -88,7 +89,7 @@ void image_update(char digit, BitmapLayer *image) {
   } else {
     bitmap_layer_set_bitmap(image, nine);
   }
-  
+
   // Align image of digits to the left of it's bitmap layer since it isn't always as wide as its containing bitmap layer
   // This ensures that our X position values always work as intended, regardless of the width of a digit
   if ((image == tens_hour) || (image == ones_hour)) {
@@ -106,17 +107,17 @@ void on_animation_stopped(Animation *anim, bool finished, void *context) {
 // animating the time changes
 void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, int duration, int delay) {
   PropertyAnimation *anim = property_animation_create_layer_frame(layer, digit_start, digit_finish);
-  
+
   // characteristics
   animation_set_duration((Animation*) anim, duration);
   animation_set_delay((Animation*) anim, delay);
-  
+
   // freeing memory while stopped
   AnimationHandlers handlers = {
     .stopped = (AnimationStoppedHandler) on_animation_stopped
   };
-  animation_set_handlers((Animation*) anim, handlers, NULL); 
-  
+  animation_set_handlers((Animation*) anim, handlers, NULL);
+
   // starting the animation
   animation_schedule((Animation*) anim);
 }
@@ -132,18 +133,18 @@ void schedule_tens_hour_digit_change() {
 }
 
 void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
-  
+
   // Get the time put into the buffer created earlier.  The if statement allows for 12hr and 24hr time
   if (clock_is_24h_style() == true) {
     strftime(time_buffer, sizeof("00:00"), "%R", tick_time);
   } else {
     strftime(time_buffer, sizeof("00:00"), "%I:%M", tick_time);
   }
-  
+
   int hours = tick_time->tm_hour; // allowing for action when the hour changes
   int minutes = tick_time->tm_min;  // allowing for action when the minute changes
   int seconds = tick_time->tm_sec; // allowing for action when the second changes
-  
+
   // image layers updated with image_update method
   image_update((char)time_buffer[0], tens_hour);
   image_update((char)time_buffer[1], ones_hour);
@@ -155,7 +156,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   /// Hours ///
   ones_hour_Xpos = ONES_HOUR;  // TODO: confirm we never need to set this, and remove it altogether
   // If ones place of hours is a 1:
-  if (strncmp("1", &time_buffer[1], 1) == 0) { 
+  if (strncmp("1", &time_buffer[1], 1) == 0) {
     tens_hour_Xpos = TENS_HOUR_BEFORE_ONE;
 
   // If ones place of hours isn't a 1
@@ -163,7 +164,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     tens_hour_Xpos = TENS_HOUR_BEFORE_ZERO;
   }
 
-  /// Minutes ///  
+  /// Minutes ///
   tens_minute_Xpos = TENS_MINUTE; // TODO: confirm we never need to set this, and remove it altogether
   // If tens place of minutes is a 1
   if (strncmp("1", &time_buffer[3], 1) == 0) {
@@ -174,7 +175,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     ones_minute_Xpos = ONES_MINUTE_AFTER_ZERO;
   }
 
-  // Reset future X positions once a minute 
+  // Reset future X positions once a minute
   if (seconds == 0) {
     reset_future_X_positions();
   }
@@ -182,7 +183,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // Digit-change animations and future_Xpos variables code happens when seconds == 58
   if (seconds == 58) {
 
-    /* 
+    /*
       Check if any future X positions need an update.
       These updates are only needed if the Xpos of a returning digit must be different from that of
       when it was leaving.  This doesn't ever concern the ones_minute digit since it will always have the
@@ -222,7 +223,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       }
     }
 
-  
+
     ///// Digit Change Animations (leave and return animations scheduled at once) (scheduled when the current second is 58) /////
     // ones digit of minutes falls before changing
     // different variables needed for this digit because of its scope (animations required everytime seconds == 58, so no need for another if statement here)
@@ -232,9 +233,9 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_normal_ones_minute, &digit_low_ones_minute, 1850, 1);
     animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_high_ones_minute, &digit_normal_ones_minute, 800, 2000);
     ones_minute_current_Xpos = ones_minute_Xpos;
-    
+
     // tens digit of minutes rises before changing
-    if (strncmp("9", &time_buffer[4], 1) == 0) { 
+    if (strncmp("9", &time_buffer[4], 1) == 0) {
       GRect digit_normal = GRect(tens_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_high = GRect(tens_minute_Xpos, HIGH_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_low = GRect(tens_minute_future_Xpos, LOW_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
@@ -242,7 +243,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_low, &digit_normal, 800, 2000);
       tens_minute_current_Xpos = tens_minute_Xpos;
     }
-    
+
     // ones digit of hours falls before changing
     if (minutes == 59) {
       GRect digit_normal = GRect (ones_hour_Xpos, NORMAL_Y, 57, DIGIT_HEIGHT);
@@ -252,21 +253,21 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_high, &digit_normal, 800, 2000);
       ones_hour_current_Xpos = ones_hour_Xpos;
     }
-    
+
     // tens digit of hours rises before changing (and according to 12hr or 24 hr time)
-    if (clock_is_24h_style() == true) { 
+    if (clock_is_24h_style() == true) {
       // this handles 24hr time
-      if ((minutes == 59) && ((hours == 9) || (hours == 19) || (hours == 23))) { 
+      if ((minutes == 59) && ((hours == 9) || (hours == 19) || (hours == 23))) {
         schedule_tens_hour_digit_change();
       }
-    } else { 
+    } else {
       // now we will deal with the 12hr case
       if ((minutes == 59) && ((hours == 9) || (hours == 12) || (hours == 21) || (hours == 0))) {
         schedule_tens_hour_digit_change();
       }
     }
   }
-  
+
   ///// Other Animations (not scheduled at second 58) /////
 
   /*
@@ -276,33 +277,33 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // Animating digit adjustment when a one appears in the hours ones place
   if ( (((hours == 1) || (hours == 11)) && (minutes == 0) && (seconds == 0)) ||
     // or moving the digit back when the one disappears from the hours ones place
-    (((hours == 2) || (hours == 12)) && (minutes == 0) && (seconds == 0)) ) 
+    (((hours == 2) || (hours == 12)) && (minutes == 0) && (seconds == 0)) )
   {
     GRect digit_start = GRect (tens_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
     GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
     animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);
     tens_hour_current_Xpos = tens_hour_Xpos;
   }
-  
+
   // 12hr-mode-specific animations:
-  if (clock_is_24h_style() == false) { 
+  if (clock_is_24h_style() == false) {
     // dealing with 11 PM
     if ( ((hours == 23) && (minutes == 0) && (seconds == 0)) ||
       // dealiing with 11 PM switching to midnight and 1 PM switching to 2 PM
-      (((hours == 0) || (hours == 14)) && (minutes == 0) && (seconds == 0)) ) 
+      (((hours == 0) || (hours == 14)) && (minutes == 0) && (seconds == 0)) )
     {
       GRect digit_start = GRect (tens_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 400, 1);
       tens_hour_current_Xpos = tens_hour_Xpos;
     }
-  
+
   // 24hr-mode-specific animations:
-  } else { 
+  } else {
     // dealing with 21:00
     if (((hours == 21) && (minutes == 0) && (seconds == 0)) ||
       // or dealing with 21:59 switching to 22:00
-      ((hours == 22) && (minutes == 0) && (seconds == 0)) ) 
+      ((hours == 22) && (minutes == 0) && (seconds == 0)) )
     {
       GRect digit_start = GRect (tens_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
@@ -310,11 +311,11 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       tens_hour_current_Xpos = tens_hour_Xpos;
     }
   }
-  
+
   // Add one time animations to fix initial positioning when watchface starts
   // TODO: confirm each of these animations work as intended
   if (format_needs_fix == true) {
-    
+
     // for if the ones place of the hour is out of place (somehow) when the face launches)
     if (ones_hour_Xpos != ONES_HOUR) {
       // move the tens place of the hour
@@ -322,22 +323,22 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1000, 1);
       tens_hour_current_Xpos = tens_hour_Xpos;
-      
+
       // move the ones place of the hour
       // TODO: can probably remove this
       GRect digit_start_2 = GRect (ones_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish_2 = GRect (ones_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(ones_hour), &digit_start_2, &digit_finish_2, 1000, 1);
       ones_hour_current_Xpos = ones_hour_Xpos;
-    
+
     // for if the ones place of the hour is a one
-    } else if (tens_hour_Xpos == TENS_HOUR_BEFORE_ONE) { 
+    } else if (tens_hour_Xpos == TENS_HOUR_BEFORE_ONE) {
       GRect digit_start = GRect (tens_hour_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish = GRect (tens_hour_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_hour), &digit_start, &digit_finish, 1000, 1);
       tens_hour_current_Xpos = tens_hour_Xpos;
     }
-    
+
     // for if the tens place of the minute is out of place (somehow) when the face launches
     if (tens_minute_Xpos != TENS_MINUTE) {
       // move the tens place of the minute
@@ -345,24 +346,24 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       GRect digit_finish = GRect(tens_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(tens_minute), &digit_start, &digit_finish, 1000, 1);
       tens_minute_current_Xpos = tens_minute_Xpos;
-      
+
       // move the ones place of the minute
       // TODO: can probably remove this
       GRect digit_start2 = GRect(ones_minute_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish2 = GRect(ones_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start2, &digit_finish2, 1000, 1);
       ones_minute_current_Xpos = ones_minute_Xpos;
-      
+
     // for if the tens place of the minute is a one
-    } else if (ones_minute_Xpos == ONES_MINUTE_AFTER_ONE) { 
+    } else if (ones_minute_Xpos == ONES_MINUTE_AFTER_ONE) {
       GRect digit_start = GRect(ones_minute_current_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       GRect digit_finish = GRect(ones_minute_Xpos, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(bitmap_layer_get_layer(ones_minute), &digit_start, &digit_finish, 1000, 1);
       ones_minute_current_Xpos = ones_minute_Xpos;
     }
-    format_needs_fix = false; 
+    format_needs_fix = false;
   }
-  
+
   // DONE with animations
 
 } // end of tick handler
@@ -372,7 +373,7 @@ void window_load (Window *my_window) {
   // load background
   background_layer = text_layer_create(GRect(0, 0, 144, 168));
   text_layer_set_background_color(background_layer, GColorBlack);
-  
+
   // loading the digit images
   zero = gbitmap_create_with_resource(RESOURCE_ID_N_0);
   one = gbitmap_create_with_resource(RESOURCE_ID_N_1);
@@ -384,33 +385,33 @@ void window_load (Window *my_window) {
   seven = gbitmap_create_with_resource(RESOURCE_ID_N_7);
   eight = gbitmap_create_with_resource(RESOURCE_ID_N_8);
   nine = gbitmap_create_with_resource(RESOURCE_ID_N_9);
-  
+
   // creating the gbitmap layers
   // hard-coded X positions allow for sliding animations for 1's on app launch
   tens_hour = bitmap_layer_create(GRect(4, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
   ones_hour = bitmap_layer_create(GRect(ONES_HOUR, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
   tens_minute = bitmap_layer_create(GRect(TENS_MINUTE, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
   ones_minute = bitmap_layer_create(GRect(112, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
-  
+
   // loading the font and the colon_layer
   HBH_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_HBH_120));
-  
+
   text_colon_layer = text_layer_create(GRect(1, 10, 143, 120));
   text_layer_set_background_color(text_colon_layer, GColorClear);
   text_layer_set_text_color(text_colon_layer, GColorWhite);
   text_layer_set_text_alignment(text_colon_layer, GTextAlignmentCenter);
   text_layer_set_font(text_colon_layer, HBH_font);
   text_layer_set_text(text_colon_layer, ":");
-  
+
   //loading the layers
   layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(background_layer));
   layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(text_colon_layer));
-  
+
   layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(tens_hour));
   layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(ones_hour));
   layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(tens_minute));
   layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(ones_minute));
-  
+
   // preventing face from starting blank
   struct tm *t;
   time_t temp;
@@ -424,7 +425,7 @@ void window_unload (Window *my_window) {
   bitmap_layer_destroy(ones_hour);
   bitmap_layer_destroy(tens_minute);
   bitmap_layer_destroy(ones_minute);
-  
+
   text_layer_destroy(background_layer);
   text_layer_destroy(text_colon_layer);
   fonts_unload_custom_font(HBH_font);
@@ -438,7 +439,16 @@ void handle_init(void) {
     .unload = window_unload,
   });
   window_stack_push(my_window, true);
-  tick_timer_service_subscribe(SECOND_UNIT, (TickHandler) tick_handler);
+
+  // TODO: configure time-machine how I want
+  #ifdef TIME_MACHINE
+    time_t now = time(NULL);
+    struct tm* tick_time = localtime(&now);
+    time_machine_init(tick_time, TIME_MACHINE_MINUTES, 1000);
+    time_machine_tick_timer_service_subscribe(MINUTE_UNIT, (TickHandler) tick_handler);
+  #else
+    tick_timer_service_subscribe(SECOND_UNIT, (TickHandler) tick_handler);
+  #endif
 }
 
 void handle_deinit(void) {
@@ -453,7 +463,7 @@ int main(void) {
   tens_minute_Xpos = tens_minute_current_Xpos = TENS_MINUTE;
   ones_minute_Xpos = ones_minute_current_Xpos = ONES_MINUTE_AFTER_ZERO;
   reset_future_X_positions();
-  
+
   handle_init();
   app_event_loop();
   handle_deinit();
