@@ -119,8 +119,20 @@ def reference(emu, t, out, cache):
         emu.set_time(t + datetime.timedelta(seconds=10) - datetime.timedelta(seconds=INSTALL_SECONDS))
         emu.launch()
         emu.wait_until(t + datetime.timedelta(seconds=10 + SETTLE_SECONDS))
-        cache[key] = emu.screenshot(os.path.join(out, "ref_%s.png" % key))
+        cache[key] = settled_screenshot(emu, os.path.join(out, "ref_%s.png" % key))
     return cache[key]
+
+
+def settled_screenshot(emu, path, attempts=5):
+    """Screenshot once two in a row match, so a launch float still finishing isn't captured."""
+    shot = emu.screenshot(path)
+    for _ in range(attempts):
+        time.sleep(0.5)
+        again = emu.screenshot(path)
+        if differing_pixels(shot, again)[0] == 0:
+            return again
+        shot = again
+    sys.exit("screen never settled for %s" % path)
 
 
 def run_transition(emu, name, launch_at, check_at, expected_time, out, cache, check_motion=True):
