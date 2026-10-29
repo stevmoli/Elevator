@@ -153,6 +153,36 @@ void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, 
   *current = (Animation*) anim;
 }
 
+// x position of the digit at index in time string t. A "1" is narrower than other digits, so the
+// digits next to one shift to keep the spacing even
+static int digit_x(const char *t, int index) {
+  switch (index) {
+    case 0:
+      if (t[0] == '1') {
+        return (t[1] == '1') ? TENS_HOUR_ONE_ONE : TENS_HOUR_ONE_ZERO;
+      }
+      return (t[1] == '1') ? TENS_HOUR_ZERO_ONE : TENS_HOUR_ZERO_ZERO;
+    case 1:
+      return (t[1] == '1') ? ONES_HOUR_ONE : ONES_HOUR_ZERO;
+    case 3:
+      return (t[3] == '1') ? TENS_MINUTE_ONE : TENS_MINUTE_ZERO;
+    default:
+      if (t[3] == '1') {
+        return (t[4] == '1') ? ONES_MINUTE_ONE_ONE : ONES_MINUTE_ONE_ZERO;
+      }
+      return (t[4] == '1') ? ONES_MINUTE_ZERO_ONE : ONES_MINUTE_ZERO_ZERO;
+  }
+}
+
+// Get the time as "HH:MM", allowing for 12hr and 24hr time
+static void format_time(struct tm *t, char *buffer) {
+  if (clock_is_24h_style() == true) {
+    strftime(buffer, sizeof("00:00"), "%R", t);
+  } else {
+    strftime(buffer, sizeof("00:00"), "%I:%M", t);
+  }
+}
+
 // PRE DIGIT CHANGE
 // Digits that are about to change leave the screen. With a duration of 0 they're only marked as gone,
 // so they still arrive from off-screen when the minute changes
@@ -257,12 +287,7 @@ static void schedule_leave_timer(void) {
 
 void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   
-  // Get the time put into the buffer created earlier.  The if statement allows for 12hr and 24hr time
-  if (clock_is_24h_style() == true) {
-    strftime(time_buffer, sizeof("00:00"), "%R", tick_time);
-  } else {
-    strftime(time_buffer, sizeof("00:00"), "%I:%M", tick_time);
-  }
+  format_time(tick_time, time_buffer);
   
   int hours = tick_time->tm_hour; // allowing for action when the hour changes
   int minutes = tick_time->tm_min;  // allowing for action when the minute changes
@@ -278,63 +303,11 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   image_update((char)time_buffer[3], tens_minute);
   image_update((char)time_buffer[4], ones_minute);
 
-  ///// Dealing with digit alignment in cases when the digit 1 is used /////
-
-  /// Hours ///
-  // If ones place of hours is a 1:
-  if (strncmp("1", &time_buffer[1], 1) == 0) { 
-    ones_hour_Xpos = ONES_HOUR_ONE;
-
-    // If tens place of hours is a 1
-    if (strncmp("1", &time_buffer[0], 1) == 0) {
-      tens_hour_Xpos = TENS_HOUR_ONE_ONE;
-
-    // If tens place of hours isn't a 1
-    } else {
-      tens_hour_Xpos = TENS_HOUR_ZERO_ONE;
-    }
-
-  // If ones place of hours isn't a 1
-  } else {
-    ones_hour_Xpos = ONES_HOUR_ZERO;
-
-    // If tens place of hours is a 1
-    if (strncmp("1", &time_buffer[0], 1) == 0) {
-      tens_hour_Xpos = TENS_HOUR_ONE_ZERO;
-    
-    // If tens place of hours isn't a 1
-    } else {
-      tens_hour_Xpos = TENS_HOUR_ZERO_ZERO;
-    }
-  }
-
-  /// Minutes ///  
-  // If tens place of minutes is a 1
-  if (strncmp("1", &time_buffer[3], 1) == 0) {
-    tens_minute_Xpos = TENS_MINUTE_ONE; 
-
-    // If ones place of minutes is a 1
-    if (strncmp("1", &time_buffer[4], 1) == 0) {
-      ones_minute_Xpos = ONES_MINUTE_ONE_ONE;
-
-    // If ones place of minutes isn't a 1
-    } else {
-      ones_minute_Xpos = ONES_MINUTE_ONE_ZERO;
-    }
-
-  // If tens place of minutes isn't a 1
-  } else {
-    tens_minute_Xpos = TENS_MINUTE_ZERO;
-
-    // If ones place of minutes is a 1
-    if (strncmp("1", &time_buffer[4], 1) == 0) {
-      ones_minute_Xpos = ONES_MINUTE_ZERO_ONE;
-    
-    // If ones place of minutes isn't a 1
-    } else {
-      ones_minute_Xpos = ONES_MINUTE_ZERO_ZERO;
-    }
-  }
+  // Where each digit belongs for this time
+  tens_hour_Xpos = digit_x(time_buffer, 0);
+  ones_hour_Xpos = digit_x(time_buffer, 1);
+  tens_minute_Xpos = digit_x(time_buffer, 3);
+  ones_minute_Xpos = digit_x(time_buffer, 4);
   
   
   // Triggering the animations:
