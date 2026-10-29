@@ -89,13 +89,44 @@ void image_update(char digit, BitmapLayer *image){
   bitmap_layer_set_alignment(image, GAlignLeft);
 }
 
+// The animation currently moving each digit (NULL when the digit is at rest)
+static Animation *tens_hour_anim, *ones_hour_anim, *tens_minute_anim, *ones_minute_anim;
+
+static Animation **current_animation_for(Layer *layer) {
+  if (layer == bitmap_layer_get_layer(tens_hour)) {
+    return &tens_hour_anim;
+  } else if (layer == bitmap_layer_get_layer(ones_hour)) {
+    return &ones_hour_anim;
+  } else if (layer == bitmap_layer_get_layer(tens_minute)) {
+    return &tens_minute_anim;
+  } else {
+    return &ones_minute_anim;
+  }
+}
+
 // destroying animations when stopped
 void on_animation_stopped(Animation *anim, bool finished, void *context) {
+  Animation **current = (Animation**) context;
+  if (*current == (Animation*) anim) {
+    *current = NULL;
+  }
   property_animation_destroy((PropertyAnimation*) anim);
 }
 
 // animating the time changes
 void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, int duration, int delay) {
+  // Nothing to move, so don't interrupt an animation that is actually moving this digit
+  if (grect_equal(digit_start, digit_finish)) {
+    return;
+  }
+
+  // Stop anything still moving this digit. Otherwise an older animation that finishes later
+  // (e.g. a :58 fall that started late) has the last word and can leave the digit off-screen
+  Animation **current = current_animation_for(layer);
+  if (*current != NULL) {
+    animation_unschedule(*current);
+  }
+
   PropertyAnimation *anim = property_animation_create_layer_frame(layer, digit_start, digit_finish);
   
   // characteristics
@@ -106,10 +137,11 @@ void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, 
   AnimationHandlers handlers = {
     .stopped = (AnimationStoppedHandler) on_animation_stopped
   };
-  animation_set_handlers((Animation*) anim, handlers, NULL);
+  animation_set_handlers((Animation*) anim, handlers, current);
   
   // starting the animation
   animation_schedule((Animation*) anim);
+  *current = (Animation*) anim;
 }
 
 void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
