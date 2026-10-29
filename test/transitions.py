@@ -43,7 +43,7 @@ try:
     from libpebble2.communication import PebbleConnection
     from libpebble2.communication.transports.websocket import WebsocketTransport
     from libpebble2.protocol.apps import AppRunState, AppRunStateStart, AppRunStateStop
-    from libpebble2.protocol.system import TimeMessage, SetUTC
+    from libpebble2.protocol.system import PingPong, Ping, TimeMessage, SetUTC
 except ImportError:
     # Re-run with the interpreter pebble-tool was installed with, which has libpebble2
     pebble_path = shutil.which("pebble")
@@ -167,6 +167,13 @@ class Emulator:
         finally:
             queue.close()
 
+    def check_alive(self):
+        """A frozen emulator still gives identical (so "settled") screenshots; make sure the watch answers."""
+        try:
+            self.conn.send_and_read(PingPong(cookie=1234, message=Ping(idle=False)), PingPong, timeout=5)
+        except Exception as e:
+            raise EmulatorHung("the watch didn't answer a ping (%s)" % type(e).__name__)
+
     def grab(self):
         """The screen as the watch shows it, straight from QEMU (much faster than `pebble screenshot`)."""
         try:
@@ -236,16 +243,21 @@ def settled_screenshot(emu, path, attempts=10):
     raise EmulatorHung("screen never settled for %s" % path)
 
 
-def run_transition(emu, name, launch_at, check_at, expected_time, out, cache, check_motion=True):
+def run_transition(emu, name, launch_at, check_at, expected_time, out, cache, check_motion=True, jump=None):
     """
     Launch the face at launch_at, then compare the settled screen after check_at with
     the reference for expected_time. If check_motion, also confirm something moved
-    around the minute change at the end of launch_at's minute.
+    around the minute change at the end of launch_at's minute. If jump is
+    (jump_at, jump_to), the clock jumps to jump_to at jump_at while the face runs.
     """
     ref = reference(emu, expected_time, out, cache)
 
     emu.set_time(launch_at - datetime.timedelta(seconds=LAUNCH_SECONDS))
     emu.launch()
+    if jump:
+        jump_at, jump_to = jump
+        emu.wait_until(jump_at)
+        emu.set_time(jump_to)
 
     problems = []
     if check_motion:
@@ -260,27 +272,28 @@ def run_transition(emu, name, launch_at, check_at, expected_time, out, cache, ch
     after = settled_screenshot(emu, os.path.join(out, "%s_after.png" % name))
     count, diff = differing_pixels(after, ref)
     if count:
+        emu.check_alive()  # a frozen emulator is the emulator's fault, not the face's
         diff.point(lambda p: 255 if p else 0).save(os.path.join(out, "%s_diff.png" % name))
         problems.append("%d pixels differ from reference %s" % (count, expected_time.strftime("%H:%M")))
     return problems
 
 
 def cases(kind):
-    """Yield (name, launch_at, check_at, expected_time, check_motion)."""
+    """Yield (name, launch_at, check_at, expected_time, check_motion, jump)."""
     lead = datetime.timedelta(seconds=LEAVE_LEAD)
 
     if kind in ("hours", "all"):
         # Every hour change: HH:59 -> HH+1:00
         for h in range(24):
             target = at("%02d:00" % h)
-            yield ("hour_%02d00" % h, target - lead, target + datetime.timedelta(seconds=3), target, True)
+            yield ("hour_%02d00" % h, target - lead, target + datetime.timedelta(seconds=3), target, True, None)
 
     if kind in ("minutes", "all"):
         # Minute changes where a 1 appears or disappears, at hours with and without 1s
         for hour in ("10", "11", "20"):
             for minute in ("01", "02", "10", "11", "12", "20", "21", "22", "41", "42"):
                 target = at("%s:%s" % (hour, minute))
-                yield ("min_%s%s" % (hour, minute), target - lead, target + datetime.timedelta(seconds=3), target, True)
+                yield ("min_%s%s" % (hour, minute), target - lead, target + datetime.timedelta(seconds=3), target, True, None)
 
     if kind in ("launch", "all"):
         # Launching the face right around a minute change
@@ -289,7 +302,27 @@ def cases(kind):
             for offset in (-3, -2, -1.5, -1, -0.5, 0, 0.5, 1):
                 launch_at = target + datetime.timedelta(seconds=offset)
                 yield ("launch_%s_%+.1f" % (target_s.replace(":", ""), offset), launch_at,
-                       target + datetime.timedelta(seconds=4), target, False)
+                       target + datetime.timedelta(seconds=4), target, False, None)
+
+    if kind in ("jumps", "all"):
+        # The clock jumping while the face runs (daylight saving, time zone changes, a phone time sync),
+        # including mid-way through digits leaving or arriving
+        for name, launch_s, jump_s, to_s in (
+                ("fwd_1h", "10:20:05", "10:20:08", "11:20:05"),
+                ("back_1h", "11:20:05", "11:20:08", "10:20:05"),
+                ("dst_spring", "01:59:20", "01:59:23", "03:00:05"),
+                ("dst_fall", "01:59:20", "01:59:23", "01:00:05"),
+                ("midnight_back", "00:30:05", "00:30:08", "23:30:05"),
+                ("ones_to_none", "11:11:05", "11:11:08", "20:20:05"),
+                ("none_to_ones", "20:20:05", "20:20:08", "11:11:05"),
+                ("noon_to_one", "12:59:05", "12:59:08", "13:00:05"),
+                ("during_leave", "10:59:53", "10:59:58.8", "10:30:05"),
+                ("during_arrive", "10:59:53", "11:00:00.3", "21:10:05")):
+            jump_to = datetime.datetime.combine(datetime.date.today(), datetime.datetime.strptime(to_s, "%H:%M:%S").time())
+            launch_at = datetime.datetime.combine(datetime.date.today(), datetime.datetime.strptime(launch_s, "%H:%M:%S").time())
+            jump_at = datetime.datetime.combine(datetime.date.today(), datetime.datetime.strptime(jump_s, "%H:%M:%S.%f" if "." in jump_s else "%H:%M:%S").time())
+            yield ("jump_" + name, launch_at, jump_to + datetime.timedelta(seconds=3), jump_to.replace(second=0), False,
+                   (jump_at, jump_to))
 
 
 def run_side_by_side(platforms):
@@ -317,7 +350,7 @@ def main():
     parser.add_argument("--platform", default="basalt",
                         help="watch model, or several separated by commas to test them side by side (e.g. aplite,basalt)")
     parser.add_argument("--format", choices=["12h", "24h", "both"], default="both")
-    parser.add_argument("--cases", choices=["hours", "minutes", "launch", "all"], default="all")
+    parser.add_argument("--cases", choices=["hours", "minutes", "launch", "jumps", "all"], default="all")
     parser.add_argument("--only", help="run only cases whose name contains this text")
     parser.add_argument("--out", default="test-results")
     args = parser.parse_args()
@@ -333,17 +366,17 @@ def main():
         os.makedirs(out, exist_ok=True)
         emu.set_format(fmt)
         cache = {}
-        for name, launch_at, check_at, expected, motion in cases(args.cases):
+        for name, launch_at, check_at, expected, motion, jump in cases(args.cases):
             if args.only and args.only not in name:
                 continue
             try:
-                problems = run_transition(emu, name, launch_at, check_at, expected, out, cache, motion)
+                problems = run_transition(emu, name, launch_at, check_at, expected, out, cache, motion, jump)
             except EmulatorHung as e:
                 # The emulator stops responding after long runs; start over from a clean one and retry once
                 print("     emulator stopped responding (%s); rebooting it" % str(e).splitlines()[0], flush=True)
                 emu.reboot()
                 cache = {}
-                problems = run_transition(emu, name, launch_at, check_at, expected, out, cache, motion)
+                problems = run_transition(emu, name, launch_at, check_at, expected, out, cache, motion, jump)
             status = "FAIL" if problems else "ok"
             print("%-4s %s %s %s" % (status, fmt, name, "; ".join(problems)), flush=True)
             failures += bool(problems)
