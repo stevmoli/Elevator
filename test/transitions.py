@@ -43,7 +43,7 @@ try:
     from libpebble2.communication import PebbleConnection
     from libpebble2.communication.transports.websocket import WebsocketTransport
     from libpebble2.protocol.apps import AppRunState, AppRunStateStart, AppRunStateStop
-    from libpebble2.protocol.system import PingPong, Ping, TimeMessage, SetUTC
+    from libpebble2.protocol.system import WatchVersion, WatchVersionRequest, TimeMessage, SetUTC
 except ImportError:
     # Re-run with the interpreter pebble-tool was installed with, which has libpebble2
     pebble_path = shutil.which("pebble")
@@ -170,9 +170,10 @@ class Emulator:
     def check_alive(self):
         """A frozen emulator still gives identical (so "settled") screenshots; make sure the watch answers."""
         try:
-            self.conn.send_and_read(PingPong(cookie=1234, message=Ping(idle=False)), PingPong, timeout=5)
+            # Ask for the firmware version: a ping would leave a "Ping" notification over the face
+            self.conn.send_and_read(WatchVersion(data=WatchVersionRequest()), WatchVersion, timeout=5)
         except Exception as e:
-            raise EmulatorHung("the watch didn't answer a ping (%s)" % type(e).__name__)
+            raise EmulatorHung("the watch didn't answer (%s)" % type(e).__name__)
 
     def grab(self):
         """The screen as the watch shows it, straight from QEMU (much faster than `pebble screenshot`)."""
