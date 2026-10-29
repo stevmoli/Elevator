@@ -363,7 +363,8 @@ void handle_init(void) {
     .unload = window_unload,
   });
   window_stack_push(my_window, true);
-  tick_timer_service_subscribe(MINUTE_UNIT, (TickHandler) tick_handler);
+  // Hours and days too: a clock jump that keeps the minute number (10:20 to 11:20) isn't a minute change
+  tick_timer_service_subscribe(MINUTE_UNIT | HOUR_UNIT | DAY_UNIT, (TickHandler) tick_handler);
 }
 
 void handle_deinit(void) {
