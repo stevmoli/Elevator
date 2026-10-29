@@ -2,3 +2,4 @@ build/
 .lock-waf*
 test-results/
 __pycache__/
+transitions-*.log
