@@ -3,7 +3,6 @@
 #include <string.h>
 
 Window *my_window;
-GBitmap *zero, *one, *two, *three, *four, *five, *six, *seven, *eight, *nine;
 TextLayer *text_colon_layer;
 static GFont HBH_font;
 TextLayer *background_layer;
@@ -13,6 +12,7 @@ const int HIGH_Y = -150; // High y position of digits (for when above top of scr
 const int LOW_Y = 170; // Low y position of digits (for when below bottom of screen during animation)
 const int DIGIT_WIDTH = 26;
 const int DIGIT_HEIGHT = 149;
+const int ONE_WIDTH = 10; // a "1" is just a bar the width of the other digits' strokes
 const int LEAVE_DURATION = 1850; // How long digits take to leave the screen before the minute changes
 const int LEAVE_MARGIN = 150; // How long before the minute changes the leaving animation finishes
 const int MIN_LEAVE_DURATION = 500; // Shorter than this and digits skip leaving and just arrive at :00
@@ -38,7 +38,7 @@ const int ONES_MINUTE_ZERO_ONE = 112;
 const int ONES_MINUTE_ONE_ZERO = 96;
 const int ONES_MINUTE_ONE_ONE = 96;
 
-BitmapLayer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
+Layer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
 
 // The time currently on screen, as "HH:MM"
 static char shown_time[] = "00:00";
@@ -50,44 +50,61 @@ static int leave_timer_minute = -1; // the minute leave_timer was set for
 static int already_left_minute = -1; // the last minute whose digits already started leaving
 static AppTimer *return_timer; // checks the digits came back after leaving (see return_timer_fired)
 
-// Updates BitmapLayers with the correct digit images, based on the current time (digits passed in as digit_string)
-void image_update(char digit, BitmapLayer *image){
-  if (strncmp("0", &digit, 1) == 0){
-    bitmap_layer_set_bitmap(image, zero);
-  } else if (strncmp("1", &digit, 1) == 0){
-    bitmap_layer_set_bitmap(image, one);
-  } else if (strncmp("2", &digit, 1) == 0){
-    bitmap_layer_set_bitmap(image, two);
-  } else if (strncmp("3", &digit, 1) == 0){
-    bitmap_layer_set_bitmap(image, three);
-  } else if (strncmp("4", &digit, 1) == 0){
-    bitmap_layer_set_bitmap(image, four);
-  } else if (strncmp("5", &digit, 1) == 0){
-    bitmap_layer_set_bitmap(image, five);
-  } else if (strncmp("6", &digit, 1) == 0){
-    bitmap_layer_set_bitmap(image, six);
-  } else if (strncmp("7", &digit, 1) == 0){
-    bitmap_layer_set_bitmap(image, seven);
-  } else if (strncmp("8", &digit, 1) == 0){
-    bitmap_layer_set_bitmap(image, eight);
-  } else {
-    bitmap_layer_set_bitmap(image, nine);
+// Each digit is drawn as a white block with black holes cut out of it (at most three per digit).
+// Positions are within the digit, in pixels. A "1" has no holes; it's just narrower
+static const GRect DIGIT_HOLES[10][3] = {
+  { {{10, 11}, {6, 127}} },                                      // 0
+  { },                                                           // 1
+  { {{0, 11}, {16, 11}}, {{10, 32}, {16, 6}}, {{10, 38}, {6, 100}} }, // 2
+  { {{0, 11}, {16, 11}}, {{0, 32}, {16, 6}}, {{10, 38}, {6, 100}} },  // 3
+  { {{10, 0}, {6, 123}}, {{0, 133}, {16, 16}} },                 // 4
+  { {{10, 11}, {16, 11}}, {{0, 32}, {16, 6}}, {{10, 38}, {6, 100}} }, // 5
+  { {{10, 11}, {16, 11}}, {{10, 32}, {6, 106}} },                // 6
+  { {{10, 11}, {6, 101}}, {{0, 112}, {16, 37}} },                // 7
+  { {{10, 11}, {6, 11}}, {{10, 32}, {6, 106}} },                 // 8
+  { {{10, 11}, {6, 11}}, {{0, 32}, {16, 6}}, {{10, 38}, {6, 100}} },  // 9
+};
+
+static void draw_digit(Layer *layer, GContext *ctx) {
+  char digit = *(char *) layer_get_data(layer);
+  int width = (digit == '1') ? ONE_WIDTH : DIGIT_WIDTH;
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_fill_rect(ctx, GRect(0, 0, width, DIGIT_HEIGHT), 0, GCornerNone);
+
+  graphics_context_set_fill_color(ctx, GColorBlack);
+  const GRect *holes = DIGIT_HOLES[digit - '0'];
+  for (int i = 0; i < 3; i++) {
+    if (holes[i].size.w > 0) {
+      graphics_fill_rect(ctx, holes[i], 0, GCornerNone);
+    }
   }
-  
-  // Align image of digits to the left of it's bitmap layer since it isn't always as wide as its containing bitmap layer
-  // This ensures that our X position values always work as intended, regardless of the width of a digit
-  bitmap_layer_set_alignment(image, GAlignLeft);
+}
+
+// Shows digit (a character, '0' to '9') on a digit layer
+static void set_digit(Layer *layer, char digit) {
+  char *shown = layer_get_data(layer);
+  if (*shown != digit) {
+    *shown = digit;
+    layer_mark_dirty(layer);
+  }
+}
+
+static Layer *create_digit_layer(GRect frame) {
+  Layer *layer = layer_create_with_data(frame, sizeof(char));
+  *(char *) layer_get_data(layer) = '0';
+  layer_set_update_proc(layer, draw_digit);
+  return layer;
 }
 
 // The animation currently moving each digit (NULL when the digit is at rest)
 static Animation *tens_hour_anim, *ones_hour_anim, *tens_minute_anim, *ones_minute_anim;
 
 static Animation **current_animation_for(Layer *layer) {
-  if (layer == bitmap_layer_get_layer(tens_hour)) {
+  if (layer == tens_hour) {
     return &tens_hour_anim;
-  } else if (layer == bitmap_layer_get_layer(ones_hour)) {
+  } else if (layer == ones_hour) {
     return &ones_hour_anim;
-  } else if (layer == bitmap_layer_get_layer(tens_minute)) {
+  } else if (layer == tens_minute) {
     return &tens_minute_anim;
   } else {
     return &ones_minute_anim;
@@ -137,7 +154,7 @@ void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, 
 // The four digits, with how each one leaves and comes back: tens digits rise and come back up from below,
 // ones digits fall and come back down from above
 typedef struct {
-  BitmapLayer **layer;
+  Layer **layer;
   int index;        // position in the "HH:MM" time string
   bool rises;       // rises off the top and comes back up from below (otherwise falls and comes back down)
   int arrive_delay; // ms before it starts coming in, so neighbouring digits don't move in lockstep
@@ -191,7 +208,7 @@ static void start_leaving(const char *next_time, int duration) {
   for (int i = 0; i < DIGIT_COUNT; i++) {
     const Digit *d = &DIGITS[i];
     if (next_time[d->index] != shown_time[d->index]) {
-      Layer *layer = bitmap_layer_get_layer(*d->layer);
+      Layer *layer = *d->layer;
       GRect digit_start = layer_get_frame(layer);
       GRect digit_finish = GRect(digit_start.origin.x, d->rises ? HIGH_Y : LOW_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
       animate_digit_layer(layer, &digit_start, &digit_finish, duration, 1);
@@ -282,7 +299,7 @@ static void return_timer_fired(void *context) {
   }
 
   for (int i = 0; i < DIGIT_COUNT; i++) {
-    Layer *layer = bitmap_layer_get_layer(*DIGITS[i].layer);
+    Layer *layer = *DIGITS[i].layer;
     GRect digit_start = layer_get_frame(layer);
     GRect digit_finish = GRect(digit_x(shown_time, DIGITS[i].index), NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
     animate_digit_layer(layer, &digit_start, &digit_finish, 800, DIGITS[i].arrive_delay);
@@ -311,8 +328,8 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   // jumps (daylight saving, a time zone change): it's handled like any other minute change
   for (int i = 0; i < DIGIT_COUNT; i++) {
     const Digit *d = &DIGITS[i];
-    Layer *layer = bitmap_layer_get_layer(*d->layer);
-    image_update(new_time[d->index], *d->layer);
+    Layer *layer = *d->layer;
+    set_digit(layer, new_time[d->index]);
     GRect digit_finish = GRect(digit_x(new_time, d->index), NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
 
     if (first_draw) {
@@ -340,23 +357,11 @@ void window_load (Window *my_window) {
   background_layer = text_layer_create(GRect(0, 0, 144, 168));
   text_layer_set_background_color(background_layer, GColorBlack);
   
-  // loading the digit images
-  zero = gbitmap_create_with_resource(RESOURCE_ID_N_0);
-  one = gbitmap_create_with_resource(RESOURCE_ID_N_1);
-  two = gbitmap_create_with_resource(RESOURCE_ID_N_2);
-  three = gbitmap_create_with_resource(RESOURCE_ID_N_3);
-  four = gbitmap_create_with_resource(RESOURCE_ID_N_4);
-  five = gbitmap_create_with_resource(RESOURCE_ID_N_5);
-  six = gbitmap_create_with_resource(RESOURCE_ID_N_6);
-  seven = gbitmap_create_with_resource(RESOURCE_ID_N_7);
-  eight = gbitmap_create_with_resource(RESOURCE_ID_N_8);
-  nine = gbitmap_create_with_resource(RESOURCE_ID_N_9);
-  
-  // creating the gbitmap layers
-  tens_hour = bitmap_layer_create(GRect(TENS_HOUR_ZERO_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
-  ones_hour = bitmap_layer_create(GRect(ONES_HOUR_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
-  tens_minute = bitmap_layer_create(GRect(TENS_MINUTE_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
-  ones_minute = bitmap_layer_create(GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
+  // creating the digit layers
+  tens_hour = create_digit_layer(GRect(TENS_HOUR_ZERO_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
+  ones_hour = create_digit_layer(GRect(ONES_HOUR_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
+  tens_minute = create_digit_layer(GRect(TENS_MINUTE_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
+  ones_minute = create_digit_layer(GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
   
   // loading the font and the colon_layer
   HBH_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_HBH_120));
@@ -372,10 +377,10 @@ void window_load (Window *my_window) {
   layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(background_layer));
   layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(text_colon_layer));
   
-  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(tens_hour));
-  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(ones_hour));
-  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(tens_minute));
-  layer_add_child(window_get_root_layer(my_window), bitmap_layer_get_layer(ones_minute));
+  layer_add_child(window_get_root_layer(my_window), tens_hour);
+  layer_add_child(window_get_root_layer(my_window), ones_hour);
+  layer_add_child(window_get_root_layer(my_window), tens_minute);
+  layer_add_child(window_get_root_layer(my_window), ones_minute);
   
   // preventing face from starting blank
   struct tm *t;
@@ -386,10 +391,10 @@ void window_load (Window *my_window) {
 }
 
 void window_unload (Window *my_window) {
-  bitmap_layer_destroy(tens_hour);
-  bitmap_layer_destroy(ones_hour);
-  bitmap_layer_destroy(tens_minute);
-  bitmap_layer_destroy(ones_minute);
+  layer_destroy(tens_hour);
+  layer_destroy(ones_hour);
+  layer_destroy(tens_minute);
+  layer_destroy(ones_minute);
   
   text_layer_destroy(background_layer);
   text_layer_destroy(text_colon_layer);
