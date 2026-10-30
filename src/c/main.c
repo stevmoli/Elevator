@@ -3,8 +3,7 @@
 #include <string.h>
 
 Window *my_window;
-TextLayer *text_colon_layer;
-static GFont HBH_font;
+Layer *colon_layer;
 TextLayer *background_layer;
 
 const int NORMAL_Y = 8; // Normal y position of digits
@@ -86,6 +85,16 @@ static void set_digit(Layer *layer, char digit) {
   if (*shown != digit) {
     *shown = digit;
     layer_mark_dirty(layer);
+  }
+}
+
+// The colon's two dots, as wide as the digits' strokes
+static const GRect COLON_DOTS[2] = { {{66, 40}, {10, 19}}, {{66, 111}, {10, 19}} };
+
+static void draw_colon(Layer *layer, GContext *ctx) {
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  for (int i = 0; i < 2; i++) {
+    graphics_fill_rect(ctx, COLON_DOTS[i], 0, GCornerNone);
   }
 }
 
@@ -363,19 +372,13 @@ void window_load (Window *my_window) {
   tens_minute = create_digit_layer(GRect(TENS_MINUTE_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
   ones_minute = create_digit_layer(GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
   
-  // loading the font and the colon_layer
-  HBH_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_HBH_120));
-  
-  text_colon_layer = text_layer_create(GRect(1, 10, 143, 120));
-  text_layer_set_background_color(text_colon_layer, GColorClear);
-  text_layer_set_text_color(text_colon_layer, GColorWhite);
-  text_layer_set_text_alignment(text_colon_layer, GTextAlignmentCenter);
-  text_layer_set_font(text_colon_layer, HBH_font);
-  text_layer_set_text(text_colon_layer, ":");
+  // creating the colon layer
+  colon_layer = layer_create(GRect(0, 0, 144, 168));
+  layer_set_update_proc(colon_layer, draw_colon);
   
   //loading the layers
   layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(background_layer));
-  layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(text_colon_layer));
+  layer_add_child(window_get_root_layer(my_window), colon_layer);
   
   layer_add_child(window_get_root_layer(my_window), tens_hour);
   layer_add_child(window_get_root_layer(my_window), ones_hour);
@@ -397,8 +400,7 @@ void window_unload (Window *my_window) {
   layer_destroy(ones_minute);
   
   text_layer_destroy(background_layer);
-  text_layer_destroy(text_colon_layer);
-  fonts_unload_custom_font(HBH_font);
+  layer_destroy(colon_layer);
 }
 
 // APP LIFE

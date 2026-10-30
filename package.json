@@ -16,12 +16,6 @@
                     "name": "ELEVATOR_MENU_IMAGE",
                     "targetPlatforms": null,
                     "type": "png"
-                },
-                {
-                    "characterRegex": "[0-9:]",
-                    "file": "fonts/hauptbahnhof.ttf",
-                    "name": "HBH_120",
-                    "type": "font"
                 }
             ]
         },
