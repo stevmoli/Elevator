@@ -84,16 +84,18 @@ static GRect scaled_hole(GRect design) {
   return GRect(x0, y0, x1 - x0, y1 - y0);
 }
 
-static void set_up_layout(GRect bounds) {
+// Fits the face into area, the part of the screen (bounds) that nothing covers
+static void set_up_layout(GRect bounds, GRect area) {
 #if defined(PBL_ROUND)
   // On a round screen the corners of the widest time (20:08) stay inside the circle up to this size
-  scale = bounds.size.w / 208.0f;
+  scale = area.size.w / 208.0f;
 #else
-  float scale_x = bounds.size.w / (float) DESIGN_WIDTH;
-  float scale_y = bounds.size.h / (float) DESIGN_HEIGHT;
+  float scale_x = area.size.w / (float) DESIGN_WIDTH;
+  float scale_y = area.size.h / (float) DESIGN_HEIGHT;
   scale = (scale_x < scale_y) ? scale_x : scale_y;
 #endif
-  origin = GPoint((bounds.size.w - scaled(DESIGN_WIDTH)) / 2, (bounds.size.h - scaled(DESIGN_HEIGHT)) / 2);
+  origin = GPoint(area.origin.x + (area.size.w - scaled(DESIGN_WIDTH)) / 2,
+                  area.origin.y + (area.size.h - scaled(DESIGN_HEIGHT)) / 2);
 
   digit_width = scaled_edge(26, COLUMN_EDGES, ARRAY_LENGTH(COLUMN_EDGES));
   one_width = scaled_edge(10, COLUMN_EDGES, ARRAY_LENGTH(COLUMN_EDGES));
@@ -411,9 +413,45 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 } // end of tick handler
 
 // WINDOW LIFE
+#if !defined(PBL_PLATFORM_APLITE) // the original Pebble has no Quick View
+// Quick View (an upcoming event shown at the bottom of rectangular watches) covers part of the screen.
+// The time shrinks to fit the space above it, following Quick View as it slides in and out
+static void fit_to_unobstructed_area(AnimationProgress progress, void *context) {
+  Layer *root = window_get_root_layer(my_window);
+  int old_normal_y = normal_y;
+  set_up_layout(layer_get_bounds(root), layer_get_unobstructed_bounds(root));
+
+  // Digits at rest move with it. Moving digits are left to finish; quick_view_done tidies up after them
+  for (int i = 0; i < DIGIT_COUNT; i++) {
+    Layer *layer = *DIGITS[i].layer;
+    if (*current_animation_for(layer) == NULL && layer_get_frame(layer).origin.y == old_normal_y) {
+      layer_set_frame(layer, GRect(digit_x(shown_time, DIGITS[i].index), normal_y, digit_width, digit_height));
+    }
+    layer_mark_dirty(layer);
+  }
+  layer_mark_dirty(colon_layer);
+}
+
+static void quick_view_done(void *context) {
+  fit_to_unobstructed_area(ANIMATION_NORMALIZED_MAX, context);
+
+  // Digits that were moving while Quick View slid in or out (arriving or sliding) were left to the old
+  // layout; send every digit to its spot in the new one (one already there doesn't move). Digits leaving
+  // at the end of the minute arrive at the new spots when the minute changes anyway
+  if (already_left_minute != shown_minute_of_day) {
+    for (int i = 0; i < DIGIT_COUNT; i++) {
+      Layer *layer = *DIGITS[i].layer;
+      GRect digit_start = layer_get_frame(layer);
+      GRect digit_finish = GRect(digit_x(shown_time, DIGITS[i].index), normal_y, digit_width, digit_height);
+      animate_digit_layer(layer, &digit_start, &digit_finish, 400, 1);
+    }
+  }
+}
+#endif
+
 void window_load (Window *my_window) {
   GRect bounds = layer_get_bounds(window_get_root_layer(my_window));
-  set_up_layout(bounds);
+  set_up_layout(bounds, layer_get_unobstructed_bounds(window_get_root_layer(my_window)));
 
   // load background
   background_layer = text_layer_create(bounds);
@@ -466,6 +504,12 @@ void handle_init(void) {
   window_stack_push(my_window, true);
   // Hours and days too: a clock jump that keeps the minute number (10:20 to 11:20) isn't a minute change
   tick_timer_service_subscribe(MINUTE_UNIT | HOUR_UNIT | DAY_UNIT, (TickHandler) tick_handler);
+#if !defined(PBL_PLATFORM_APLITE) // the original Pebble has no Quick View
+  unobstructed_area_service_subscribe((UnobstructedAreaHandlers) {
+    .change = fit_to_unobstructed_area,
+    .did_change = quick_view_done,
+  }, NULL);
+#endif
 }
 
 void handle_deinit(void) {
