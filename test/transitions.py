@@ -58,6 +58,13 @@ LEAVE_LEAD = 6         # transition cases launch this many seconds before the mi
 APP_UUID = uuid.UUID(json.load(open("package.json"))["pebble"]["uuid"])
 
 
+# Screen size of each watch model
+SCREEN_SIZES = {
+    "aplite": (144, 168), "basalt": (144, 168), "diorite": (144, 168), "flint": (144, 168),
+    "emery": (200, 228), "chalk": (180, 180), "gabbro": (260, 260),
+}
+
+
 class EmulatorHung(Exception):
     pass
 
@@ -182,9 +189,18 @@ class Emulator:
             self._read_prompt()
         except OSError as e:
             raise EmulatorHung("QEMU monitor: %s" % e)
-        # QEMU's display shows the screen inset by 2 px and with greys scaled to 2/3 (255 shows as 170)
-        img = Image.open(self.dump).convert("RGB").crop((2, 2, 146, 170))
-        return img.point(lambda v: min(255, round(v * 1.5)))
+        img = Image.open(self.dump).convert("RGB")
+        # Some models' frames have a border around the screen (the Pebble Time's is 2 px)
+        w, h = SCREEN_SIZES[self.platform]
+        left, top = (img.width - w) // 2, (img.height - h) // 2
+        img = img.crop((left, top, left + w, top + h))
+        # QEMU shows white dimmed: 170 or 180 depending on the model, and on the Time 2 it follows the
+        # backlight (255 while lit, 100 once it goes off). The face is black and white with something
+        # white always on screen (the colon), so stretch each frame's brightest value back to white
+        white = max(band_max for _, band_max in img.getextrema())
+        if white == 0:
+            return img
+        return img.point(lambda v: min(255, round(v * 255 / white)))
 
     def screenshot(self, path):
         img = self.grab()
