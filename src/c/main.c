@@ -4,7 +4,6 @@
 
 Window *my_window;
 Layer *colon_layer;
-TextLayer *background_layer;
 
 // The face is designed for a 144x168 screen; the numbers below are in that design's pixels.
 // Bigger screens scale the design up and centre it (see set_up_layout)
@@ -453,10 +452,6 @@ void window_load (Window *my_window) {
   GRect bounds = layer_get_bounds(window_get_root_layer(my_window));
   set_up_layout(bounds, layer_get_unobstructed_bounds(window_get_root_layer(my_window)));
 
-  // load background
-  background_layer = text_layer_create(bounds);
-  text_layer_set_background_color(background_layer, GColorBlack);
-  
   // creating the digit layers
   tens_hour = create_digit_layer(GRect(digit_x("00:00", 0), normal_y, digit_width, digit_height));
   ones_hour = create_digit_layer(GRect(digit_x("00:00", 1), normal_y, digit_width, digit_height));
@@ -468,7 +463,6 @@ void window_load (Window *my_window) {
   layer_set_update_proc(colon_layer, draw_colon);
   
   //loading the layers
-  layer_add_child(window_get_root_layer(my_window), text_layer_get_layer(background_layer));
   layer_add_child(window_get_root_layer(my_window), colon_layer);
   
   layer_add_child(window_get_root_layer(my_window), tens_hour);
@@ -489,14 +483,13 @@ void window_unload (Window *my_window) {
   layer_destroy(ones_hour);
   layer_destroy(tens_minute);
   layer_destroy(ones_minute);
-  
-  text_layer_destroy(background_layer);
   layer_destroy(colon_layer);
 }
 
 // APP LIFE
 void handle_init(void) {
   my_window = window_create();
+  window_set_background_color(my_window, GColorBlack);
   window_set_window_handlers(my_window, (WindowHandlers) {
     .load = window_load,
     .unload = window_unload,
