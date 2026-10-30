@@ -6,36 +6,22 @@ Window *my_window;
 Layer *colon_layer;
 TextLayer *background_layer;
 
-const int NORMAL_Y = 8; // Normal y position of digits
-const int HIGH_Y = -150; // High y position of digits (for when above top of screen during animation)
-const int LOW_Y = 170; // Low y position of digits (for when below bottom of screen during animation)
-const int DIGIT_WIDTH = 26;
-const int DIGIT_HEIGHT = 149;
-const int ONE_WIDTH = 10; // a "1" is just a bar the width of the other digits' strokes
+// The face is designed for a 144x168 screen; the numbers below are in that design's pixels.
+// Bigger screens scale the design up and centre it (see set_up_layout)
+const int DESIGN_WIDTH = 144;
+const int DESIGN_HEIGHT = 168;
+const int DESIGN_NORMAL_Y = 8; // y position of the digits at rest
+// Edges of the digits' columns and rows, within a digit. Strokes are 10 px with a 6 px gap between them
+// (a "1" is a single 10 px stroke); bars and gaps are 10 or 11 px tall, with 6 px gaps in the 2, 3, 5 and 9
+static const int COLUMN_EDGES[] = { 0, 10, 16, 26 };
+static const int ROW_EDGES[] = { 0, 11, 22, 32, 38, 48, 112, 123, 133, 138, 149 };
 const int LEAVE_DURATION = 1850; // How long digits take to leave the screen before the minute changes
 const int LEAVE_MARGIN = 150; // How long before the minute changes the leaving animation finishes
 const int MIN_LEAVE_DURATION = 500; // Shorter than this and digits skip leaving and just arrive at :00
-/* 
-  The below constant ints are the x position of the specified digit when the minute or hour digits match
-  the format of the digits in the variable name. ONE represents a 1, ZERO represents any other digit.
-  The tens place of the hour and ones place of the minutes can be offset by the ones place of the hour
-  and tens place of the minute, respectively, so these digits require formats including both digits.
-  I.E., the hour "12" would have its tens place positioned with TENS_HOUR_ONE_ZERO and ones place positioned
-  with ONES_HOUR_ZERO, while the minute "12" would have its tens place positioned with TENS_MINUTE_ONE and 
-  its ones place positioned with ONES_MINUTE_ONE_ZERO
-*/
-const int TENS_HOUR_ZERO_ZERO = 4;
-const int TENS_HOUR_ZERO_ONE = 20;
-const int TENS_HOUR_ONE_ZERO = 20;
-const int TENS_HOUR_ONE_ONE = 36;
-const int ONES_HOUR_ZERO = 36;
-const int ONES_HOUR_ONE = 52;
-const int TENS_MINUTE_ZERO = 80;
-const int TENS_MINUTE_ONE = 80;
-const int ONES_MINUTE_ZERO_ZERO = 113;
-const int ONES_MINUTE_ZERO_ONE = 112;
-const int ONES_MINUTE_ONE_ZERO = 96;
-const int ONES_MINUTE_ONE_ONE = 96;
+// Across the face: the hours end 4 px left of the colon and the minutes start 4 px right of it, with
+// a 6 px gap between the two digits of each. The colon's dots are at x = 66
+const int DESIGN_COLON_X = 66;
+const int DESIGN_COLON_GAP = 4;
 
 Layer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
 
@@ -50,7 +36,7 @@ static int already_left_minute = -1; // the last minute whose digits already sta
 static AppTimer *return_timer; // checks the digits came back after leaving (see return_timer_fired)
 
 // Each digit is drawn as a white block with black holes cut out of it (at most three per digit).
-// Positions are within the digit, in pixels. A "1" has no holes; it's just narrower
+// Positions are within the digit, in design pixels. A "1" has no holes; it's just narrower
 static const GRect DIGIT_HOLES[10][3] = {
   { {{10, 11}, {6, 127}} },                                      // 0
   { },                                                           // 1
@@ -64,14 +50,77 @@ static const GRect DIGIT_HOLES[10][3] = {
   { {{10, 11}, {6, 11}}, {{0, 32}, {16, 6}}, {{10, 38}, {6, 100}} },  // 9
 };
 
+// The colon's two dots, as wide as the digits' strokes (design pixels, on the screen)
+static const GRect COLON_DOTS[2] = { {{66, 40}, {10, 19}}, {{66, 111}, {10, 19}} };
+
+// The layout on this watch's screen, worked out by set_up_layout
+static float scale = 1;
+static GPoint origin; // where the design's top-left corner lands
+static int digit_width, one_width, digit_height;
+static int normal_y; // y of the digits at rest
+static int high_y, low_y; // y of the digits when just off the top and bottom of the screen
+static GRect digit_holes[10][3];
+static GRect colon_dots[2];
+
+static int scaled(int design) {
+  return (int) (design * scale + 0.5f);
+}
+
+// Scales a position within a digit that falls on one of its edges. Each stretch between two edges
+// is rounded on its own, so strokes, bars and gaps that were the same size stay the same size
+static int scaled_edge(int design, const int *edges, int edge_count) {
+  int result = 0;
+  for (int i = 1; i < edge_count && edges[i] <= design; i++) {
+    result += scaled(edges[i] - edges[i - 1]);
+  }
+  return result;
+}
+
+static GRect scaled_hole(GRect design) {
+  int x0 = scaled_edge(design.origin.x, COLUMN_EDGES, ARRAY_LENGTH(COLUMN_EDGES));
+  int x1 = scaled_edge(design.origin.x + design.size.w, COLUMN_EDGES, ARRAY_LENGTH(COLUMN_EDGES));
+  int y0 = scaled_edge(design.origin.y, ROW_EDGES, ARRAY_LENGTH(ROW_EDGES));
+  int y1 = scaled_edge(design.origin.y + design.size.h, ROW_EDGES, ARRAY_LENGTH(ROW_EDGES));
+  return GRect(x0, y0, x1 - x0, y1 - y0);
+}
+
+static void set_up_layout(GRect bounds) {
+#if defined(PBL_ROUND)
+  // On a round screen the corners of the widest time (20:08) stay inside the circle up to this size
+  scale = bounds.size.w / 208.0f;
+#else
+  float scale_x = bounds.size.w / (float) DESIGN_WIDTH;
+  float scale_y = bounds.size.h / (float) DESIGN_HEIGHT;
+  scale = (scale_x < scale_y) ? scale_x : scale_y;
+#endif
+  origin = GPoint((bounds.size.w - scaled(DESIGN_WIDTH)) / 2, (bounds.size.h - scaled(DESIGN_HEIGHT)) / 2);
+
+  digit_width = scaled_edge(26, COLUMN_EDGES, ARRAY_LENGTH(COLUMN_EDGES));
+  one_width = scaled_edge(10, COLUMN_EDGES, ARRAY_LENGTH(COLUMN_EDGES));
+  digit_height = scaled_edge(149, ROW_EDGES, ARRAY_LENGTH(ROW_EDGES));
+  normal_y = origin.y + scaled(DESIGN_NORMAL_Y);
+  high_y = -(digit_height + 1);
+  low_y = bounds.size.h + 2;
+
+  for (int digit = 0; digit < 10; digit++) {
+    for (int i = 0; i < 3; i++) {
+      digit_holes[digit][i] = (DIGIT_HOLES[digit][i].size.w > 0) ? scaled_hole(DIGIT_HOLES[digit][i]) : GRectZero;
+    }
+  }
+  for (int i = 0; i < 2; i++) {
+    colon_dots[i] = GRect(origin.x + scaled(COLON_DOTS[i].origin.x), origin.y + scaled(COLON_DOTS[i].origin.y),
+                          one_width, scaled(COLON_DOTS[i].size.h));
+  }
+}
+
 static void draw_digit(Layer *layer, GContext *ctx) {
   char digit = *(char *) layer_get_data(layer);
-  int width = (digit == '1') ? ONE_WIDTH : DIGIT_WIDTH;
+  int width = (digit == '1') ? one_width : digit_width;
   graphics_context_set_fill_color(ctx, GColorWhite);
-  graphics_fill_rect(ctx, GRect(0, 0, width, DIGIT_HEIGHT), 0, GCornerNone);
+  graphics_fill_rect(ctx, GRect(0, 0, width, digit_height), 0, GCornerNone);
 
   graphics_context_set_fill_color(ctx, GColorBlack);
-  const GRect *holes = DIGIT_HOLES[digit - '0'];
+  const GRect *holes = digit_holes[digit - '0'];
   for (int i = 0; i < 3; i++) {
     if (holes[i].size.w > 0) {
       graphics_fill_rect(ctx, holes[i], 0, GCornerNone);
@@ -88,13 +137,10 @@ static void set_digit(Layer *layer, char digit) {
   }
 }
 
-// The colon's two dots, as wide as the digits' strokes
-static const GRect COLON_DOTS[2] = { {{66, 40}, {10, 19}}, {{66, 111}, {10, 19}} };
-
 static void draw_colon(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
   for (int i = 0; i < 2; i++) {
-    graphics_fill_rect(ctx, COLON_DOTS[i], 0, GCornerNone);
+    graphics_fill_rect(ctx, colon_dots[i], 0, GCornerNone);
   }
 }
 
@@ -177,24 +223,28 @@ static const Digit DIGITS[] = {
 };
 #define DIGIT_COUNT 4
 
-// x position of the digit at index in time string t. A "1" is narrower than other digits, so the
-// digits next to one shift to keep the spacing even
+// x position of the digit at index in time string t, on this screen. A "1" is narrower than other
+// digits, so the digits next to one shift to keep the spacing even
 static int digit_x(const char *t, int index) {
+  int gap = scaled_edge(16, COLUMN_EDGES, ARRAY_LENGTH(COLUMN_EDGES)) - one_width; // as wide as the hollow in a digit
+  int colon_x = origin.x + scaled(DESIGN_COLON_X);
+  int colon_gap = scaled(DESIGN_COLON_GAP);
+  int tens_hour_width = (t[0] == '1') ? one_width : digit_width;
+  int ones_hour_width = (t[1] == '1') ? one_width : digit_width;
+  int tens_minute_width = (t[3] == '1') ? one_width : digit_width;
+
+  int ones_hour_x = colon_x - colon_gap - ones_hour_width;
+  int tens_minute_x = colon_x + one_width + colon_gap;
   switch (index) {
     case 0:
-      if (t[0] == '1') {
-        return (t[1] == '1') ? TENS_HOUR_ONE_ONE : TENS_HOUR_ONE_ZERO;
-      }
-      return (t[1] == '1') ? TENS_HOUR_ZERO_ONE : TENS_HOUR_ZERO_ZERO;
+      return ones_hour_x - gap - tens_hour_width;
     case 1:
-      return (t[1] == '1') ? ONES_HOUR_ONE : ONES_HOUR_ZERO;
+      return ones_hour_x;
     case 3:
-      return (t[3] == '1') ? TENS_MINUTE_ONE : TENS_MINUTE_ZERO;
+      return tens_minute_x;
     default:
-      if (t[3] == '1') {
-        return (t[4] == '1') ? ONES_MINUTE_ONE_ONE : ONES_MINUTE_ONE_ZERO;
-      }
-      return (t[4] == '1') ? ONES_MINUTE_ZERO_ONE : ONES_MINUTE_ZERO_ZERO;
+      // One pixel further right when neither minute digit is a 1, as in the original design
+      return tens_minute_x + tens_minute_width + gap + ((t[3] != '1' && t[4] != '1') ? 1 : 0);
   }
 }
 
@@ -219,7 +269,7 @@ static void start_leaving(const char *next_time, int duration) {
     if (next_time[d->index] != shown_time[d->index]) {
       Layer *layer = *d->layer;
       GRect digit_start = layer_get_frame(layer);
-      GRect digit_finish = GRect(digit_start.origin.x, d->rises ? HIGH_Y : LOW_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+      GRect digit_finish = GRect(digit_start.origin.x, d->rises ? high_y : low_y, digit_width, digit_height);
       animate_digit_layer(layer, &digit_start, &digit_finish, duration, 1);
     }
   }
@@ -310,7 +360,7 @@ static void return_timer_fired(void *context) {
   for (int i = 0; i < DIGIT_COUNT; i++) {
     Layer *layer = *DIGITS[i].layer;
     GRect digit_start = layer_get_frame(layer);
-    GRect digit_finish = GRect(digit_x(shown_time, DIGITS[i].index), NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+    GRect digit_finish = GRect(digit_x(shown_time, DIGITS[i].index), normal_y, digit_width, digit_height);
     animate_digit_layer(layer, &digit_start, &digit_finish, 800, DIGITS[i].arrive_delay);
   }
   already_left_minute = -1;
@@ -339,7 +389,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     const Digit *d = &DIGITS[i];
     Layer *layer = *d->layer;
     set_digit(layer, new_time[d->index]);
-    GRect digit_finish = GRect(digit_x(new_time, d->index), NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+    GRect digit_finish = GRect(digit_x(new_time, d->index), normal_y, digit_width, digit_height);
 
     if (first_draw) {
       // The face starts with every digit at its spot for "00:00"; float each one to where it belongs
@@ -347,7 +397,7 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
       animate_digit_layer(layer, &digit_start, &digit_finish, 1000, 1);
     } else if (new_time[d->index] != shown_time[d->index]) {
       // A changed digit comes in from off-screen
-      GRect digit_start = GRect(digit_finish.origin.x, d->rises ? LOW_Y : HIGH_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+      GRect digit_start = GRect(digit_finish.origin.x, d->rises ? low_y : high_y, digit_width, digit_height);
       animate_digit_layer(layer, &digit_start, &digit_finish, 800, d->arrive_delay);
     } else {
       // An unchanged digit slides to its new spot if a 1 appeared or disappeared next to it
@@ -362,18 +412,21 @@ void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
 
 // WINDOW LIFE
 void window_load (Window *my_window) {
+  GRect bounds = layer_get_bounds(window_get_root_layer(my_window));
+  set_up_layout(bounds);
+
   // load background
-  background_layer = text_layer_create(GRect(0, 0, 144, 168));
+  background_layer = text_layer_create(bounds);
   text_layer_set_background_color(background_layer, GColorBlack);
   
   // creating the digit layers
-  tens_hour = create_digit_layer(GRect(TENS_HOUR_ZERO_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
-  ones_hour = create_digit_layer(GRect(ONES_HOUR_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
-  tens_minute = create_digit_layer(GRect(TENS_MINUTE_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
-  ones_minute = create_digit_layer(GRect(ONES_MINUTE_ZERO_ZERO, NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT));
+  tens_hour = create_digit_layer(GRect(digit_x("00:00", 0), normal_y, digit_width, digit_height));
+  ones_hour = create_digit_layer(GRect(digit_x("00:00", 1), normal_y, digit_width, digit_height));
+  tens_minute = create_digit_layer(GRect(digit_x("00:00", 3), normal_y, digit_width, digit_height));
+  ones_minute = create_digit_layer(GRect(digit_x("00:00", 4), normal_y, digit_width, digit_height));
   
   // creating the colon layer
-  colon_layer = layer_create(GRect(0, 0, 144, 168));
+  colon_layer = layer_create(bounds);
   layer_set_update_proc(colon_layer, draw_colon);
   
   //loading the layers
