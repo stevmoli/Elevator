@@ -1,28 +1,27 @@
 #include <pebble.h>
-#include <stdio.h>
 #include <string.h>
 
-Window *my_window;
-Layer *colon_layer;
+static Window *my_window;
+static Layer *colon_layer;
 
 // The face is designed for a 144x168 screen; the numbers below are in that design's pixels.
 // Bigger screens scale the design up and centre it (see set_up_layout)
-const int DESIGN_WIDTH = 144;
-const int DESIGN_HEIGHT = 168;
-const int DESIGN_NORMAL_Y = 8; // y position of the digits at rest
+static const int DESIGN_WIDTH = 144;
+static const int DESIGN_HEIGHT = 168;
+static const int DESIGN_NORMAL_Y = 8; // y position of the digits at rest
 // Edges of the digits' columns and rows, within a digit. Strokes are 10 px with a 6 px gap between them
 // (a "1" is a single 10 px stroke); bars and gaps are 10 or 11 px tall, with 6 px gaps in the 2, 3, 5 and 9
 static const int COLUMN_EDGES[] = { 0, 10, 16, 26 };
 static const int ROW_EDGES[] = { 0, 11, 22, 32, 38, 48, 112, 123, 133, 138, 149 };
-const int LEAVE_DURATION = 1850; // How long digits take to leave the screen before the minute changes
-const int LEAVE_MARGIN = 150; // How long before the minute changes the leaving animation finishes
-const int MIN_LEAVE_DURATION = 500; // Shorter than this and digits skip leaving and just arrive at :00
+static const int LEAVE_DURATION = 1850; // How long digits take to leave the screen before the minute changes
+static const int LEAVE_MARGIN = 150; // How long before the minute changes the leaving animation finishes
+static const int MIN_LEAVE_DURATION = 500; // Shorter than this and digits skip leaving and just arrive at :00
 // Across the face: the hours end 4 px left of the colon and the minutes start 4 px right of it, with
 // a 6 px gap between the two digits of each. The colon's dots are at x = 66
-const int DESIGN_COLON_X = 66;
-const int DESIGN_COLON_GAP = 4;
+static const int DESIGN_COLON_X = 66;
+static const int DESIGN_COLON_GAP = 4;
 
-Layer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
+static Layer *tens_hour, *ones_hour, *tens_minute, *ones_minute;
 
 // The time currently on screen, as "HH:MM"
 static char shown_time[] = "00:00";
@@ -168,7 +167,7 @@ static Animation **current_animation_for(Layer *layer) {
 }
 
 // destroying animations when stopped
-void on_animation_stopped(Animation *anim, bool finished, void *context) {
+static void on_animation_stopped(Animation *anim, bool finished, void *context) {
   Animation **current = (Animation**) context;
   if (*current == (Animation*) anim) {
     *current = NULL;
@@ -177,7 +176,7 @@ void on_animation_stopped(Animation *anim, bool finished, void *context) {
 }
 
 // animating the time changes
-void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, int duration, int delay) {
+static void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, int duration, int delay) {
   // Nothing to move, so don't interrupt an animation that is actually moving this digit
   if (grect_equal(digit_start, digit_finish)) {
     return;
@@ -198,7 +197,7 @@ void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, 
   
   // freeing memory while stopped
   AnimationHandlers handlers = {
-    .stopped = (AnimationStoppedHandler) on_animation_stopped
+    .stopped = on_animation_stopped
   };
   animation_set_handlers((Animation*) anim, handlers, current);
   
@@ -368,7 +367,7 @@ static void return_timer_fired(void *context) {
   schedule_leave_timer();
 }
 
-void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
+static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   char new_time[] = "00:00";
   format_time(tick_time, new_time);
 
@@ -448,9 +447,9 @@ static void quick_view_done(void *context) {
 }
 #endif
 
-void window_load (Window *my_window) {
-  GRect bounds = layer_get_bounds(window_get_root_layer(my_window));
-  set_up_layout(bounds, layer_get_unobstructed_bounds(window_get_root_layer(my_window)));
+static void window_load(Window *window) {
+  GRect bounds = layer_get_bounds(window_get_root_layer(window));
+  set_up_layout(bounds, layer_get_unobstructed_bounds(window_get_root_layer(window)));
 
   // creating the digit layers
   tens_hour = create_digit_layer(GRect(digit_x("00:00", 0), normal_y, digit_width, digit_height));
@@ -463,12 +462,12 @@ void window_load (Window *my_window) {
   layer_set_update_proc(colon_layer, draw_colon);
   
   //loading the layers
-  layer_add_child(window_get_root_layer(my_window), colon_layer);
+  layer_add_child(window_get_root_layer(window), colon_layer);
   
-  layer_add_child(window_get_root_layer(my_window), tens_hour);
-  layer_add_child(window_get_root_layer(my_window), ones_hour);
-  layer_add_child(window_get_root_layer(my_window), tens_minute);
-  layer_add_child(window_get_root_layer(my_window), ones_minute);
+  layer_add_child(window_get_root_layer(window), tens_hour);
+  layer_add_child(window_get_root_layer(window), ones_hour);
+  layer_add_child(window_get_root_layer(window), tens_minute);
+  layer_add_child(window_get_root_layer(window), ones_minute);
   
   // preventing face from starting blank
   struct tm *t;
@@ -478,7 +477,7 @@ void window_load (Window *my_window) {
   tick_handler(t, MINUTE_UNIT);
 }
 
-void window_unload (Window *my_window) {
+static void window_unload(Window *window) {
   layer_destroy(tens_hour);
   layer_destroy(ones_hour);
   layer_destroy(tens_minute);
@@ -487,7 +486,7 @@ void window_unload (Window *my_window) {
 }
 
 // APP LIFE
-void handle_init(void) {
+static void handle_init(void) {
   my_window = window_create();
   window_set_background_color(my_window, GColorBlack);
   window_set_window_handlers(my_window, (WindowHandlers) {
@@ -496,7 +495,7 @@ void handle_init(void) {
   });
   window_stack_push(my_window, true);
   // Hours and days too: a clock jump that keeps the minute number (10:20 to 11:20) isn't a minute change
-  tick_timer_service_subscribe(MINUTE_UNIT | HOUR_UNIT | DAY_UNIT, (TickHandler) tick_handler);
+  tick_timer_service_subscribe(MINUTE_UNIT | HOUR_UNIT | DAY_UNIT, tick_handler);
 #if !defined(PBL_PLATFORM_APLITE) // the original Pebble has no Quick View
   unobstructed_area_service_subscribe((UnobstructedAreaHandlers) {
     .change = fit_to_unobstructed_area,
@@ -505,7 +504,7 @@ void handle_init(void) {
 #endif
 }
 
-void handle_deinit(void) {
+static void handle_deinit(void) {
   if (leave_timer != NULL) {
     app_timer_cancel(leave_timer);
   }
