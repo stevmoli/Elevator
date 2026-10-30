@@ -166,7 +166,7 @@ static Animation **current_animation_for(Layer *layer) {
   }
 }
 
-// destroying animations when stopped
+// Frees a digit's animation once it stops, and forgets it if it's still the digit's current one
 static void on_animation_stopped(Animation *anim, bool finished, void *context) {
   Animation **current = (Animation**) context;
   if (*current == (Animation*) anim) {
@@ -175,7 +175,7 @@ static void on_animation_stopped(Animation *anim, bool finished, void *context) 
   property_animation_destroy((PropertyAnimation*) anim);
 }
 
-// animating the time changes
+// Moves a digit from digit_start to digit_finish, replacing anything still moving it
 static void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_finish, int duration, int delay) {
   // Nothing to move, so don't interrupt an animation that is actually moving this digit
   if (grect_equal(digit_start, digit_finish)) {
@@ -190,18 +190,12 @@ static void animate_digit_layer(Layer *layer, GRect *digit_start, GRect *digit_f
   }
 
   PropertyAnimation *anim = property_animation_create_layer_frame(layer, digit_start, digit_finish);
-  
-  // characteristics
   animation_set_duration((Animation*) anim, duration);
   animation_set_delay((Animation*) anim, delay);
-  
-  // freeing memory while stopped
   AnimationHandlers handlers = {
     .stopped = on_animation_stopped
   };
   animation_set_handlers((Animation*) anim, handlers, current);
-  
-  // starting the animation
   animation_schedule((Animation*) anim);
   *current = (Animation*) anim;
 }
@@ -248,16 +242,15 @@ static int digit_x(const char *t, int index) {
   }
 }
 
-// Get the time as "HH:MM", allowing for 12hr and 24hr time
+// The time as "HH:MM", in 12h or 24h as the watch is set
 static void format_time(struct tm *t, char *buffer) {
-  if (clock_is_24h_style() == true) {
+  if (clock_is_24h_style()) {
     strftime(buffer, sizeof("00:00"), "%R", t);
   } else {
     strftime(buffer, sizeof("00:00"), "%I:%M", t);
   }
 }
 
-// PRE DIGIT CHANGE
 // Digits that are about to change leave the screen. With a duration of 0 they're left in place;
 // they still arrive from off-screen when the minute changes
 static void start_leaving(const char *next_time, int duration) {
@@ -382,7 +375,6 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
     return;
   }
 
-  // POST DIGIT CHANGE
   // Every digit ends up at its spot for the new time, wherever it is now. This also covers a clock that
   // jumps (daylight saving, a time zone change): it's handled like any other minute change
   for (int i = 0; i < DIGIT_COUNT; i++) {
@@ -408,9 +400,8 @@ static void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
   strcpy(shown_time, new_time);
 
   schedule_leave_timer();
-} // end of tick handler
+}
 
-// WINDOW LIFE
 #if !defined(PBL_PLATFORM_APLITE) // the original Pebble has no Quick View
 // Quick View (an upcoming event shown at the bottom of rectangular watches) covers part of the screen.
 // The time shrinks to fit the space above it, following Quick View as it slides in and out
@@ -451,30 +442,24 @@ static void window_load(Window *window) {
   GRect bounds = layer_get_bounds(window_get_root_layer(window));
   set_up_layout(bounds, layer_get_unobstructed_bounds(window_get_root_layer(window)));
 
-  // creating the digit layers
   tens_hour = create_digit_layer(GRect(digit_x("00:00", 0), normal_y, digit_width, digit_height));
   ones_hour = create_digit_layer(GRect(digit_x("00:00", 1), normal_y, digit_width, digit_height));
   tens_minute = create_digit_layer(GRect(digit_x("00:00", 3), normal_y, digit_width, digit_height));
   ones_minute = create_digit_layer(GRect(digit_x("00:00", 4), normal_y, digit_width, digit_height));
-  
-  // creating the colon layer
+
   colon_layer = layer_create(bounds);
   layer_set_update_proc(colon_layer, draw_colon);
-  
-  //loading the layers
+
   layer_add_child(window_get_root_layer(window), colon_layer);
-  
+
   layer_add_child(window_get_root_layer(window), tens_hour);
   layer_add_child(window_get_root_layer(window), ones_hour);
   layer_add_child(window_get_root_layer(window), tens_minute);
   layer_add_child(window_get_root_layer(window), ones_minute);
-  
-  // preventing face from starting blank
-  struct tm *t;
-  time_t temp;
-  temp = time(NULL);
-  t = localtime(&temp);
-  tick_handler(t, MINUTE_UNIT);
+
+  // Draw the time straight away rather than waiting for the first tick
+  time_t now = time(NULL);
+  tick_handler(localtime(&now), MINUTE_UNIT);
 }
 
 static void window_unload(Window *window) {
@@ -485,7 +470,6 @@ static void window_unload(Window *window) {
   layer_destroy(colon_layer);
 }
 
-// APP LIFE
 static void handle_init(void) {
   my_window = window_create();
   window_set_background_color(my_window, GColorBlack);
