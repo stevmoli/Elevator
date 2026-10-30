@@ -48,6 +48,7 @@ static int shown_minute_of_day = -1; // the minute currently on screen (-1 until
 static AppTimer *leave_timer; // starts the digits leaving near :58
 static int leave_timer_minute = -1; // the minute leave_timer was set for
 static int already_left_minute = -1; // the last minute whose digits already started leaving
+static AppTimer *return_timer; // checks the digits came back after leaving (see return_timer_fired)
 
 // Updates BitmapLayers with the correct digit images, based on the current time (digits passed in as digit_string)
 void image_update(char digit, BitmapLayer *image){
@@ -198,6 +199,8 @@ static void start_leaving(const char *next_time, int duration) {
   }
 }
 
+static void return_timer_fired(void *context);
+
 // Fires near :58 to start the digits leaving, so the watch only wakes for the animations instead of every second
 static void leave_timer_fired(void *context) {
   leave_timer = NULL;
@@ -233,6 +236,12 @@ static void leave_timer_fired(void *context) {
   char next_time[] = "00:00";
   format_time(localtime(&next_minute), next_time);
   start_leaving(next_time, duration);
+
+  // App timers count elapsed time, so this still fires if the clock is set back before the minute changes
+  if (return_timer != NULL) {
+    app_timer_cancel(return_timer);
+  }
+  return_timer = app_timer_register(ms_left + 1000, return_timer_fired, NULL);
 }
 
 static void schedule_leave_timer(void) {
@@ -248,6 +257,38 @@ static void schedule_leave_timer(void) {
   leave_timer_minute = t->tm_hour * 60 + t->tm_min;
   int ms_until_58 = (58 - t->tm_sec) * 1000 - ms;
   leave_timer = app_timer_register(ms_until_58 > 0 ? ms_until_58 : 0, leave_timer_fired, NULL);
+}
+
+// Fires a second after the minute should have changed. Normally it has, and the digits have arrived.
+// If the clock was set back within the same minute while the digits were leaving (a phone time sync
+// right at :59, say), that minute change won't come for a while; bring the digits back instead of
+// leaving them off-screen until it does
+static void return_timer_fired(void *context) {
+  return_timer = NULL;
+
+  time_t now;
+  uint16_t ms;
+  time_ms(&now, &ms);
+  struct tm *t = localtime(&now);
+
+  if ((t->tm_hour * 60 + t->tm_min) != shown_minute_of_day || already_left_minute != shown_minute_of_day) {
+    return;
+  }
+
+  // Set back to the end of the minute again: the digits should be leaving anyway, so check after it ends
+  if (t->tm_sec >= 57) {
+    return_timer = app_timer_register((60 - t->tm_sec) * 1000 - ms + 1000, return_timer_fired, NULL);
+    return;
+  }
+
+  for (int i = 0; i < DIGIT_COUNT; i++) {
+    Layer *layer = bitmap_layer_get_layer(*DIGITS[i].layer);
+    GRect digit_start = layer_get_frame(layer);
+    GRect digit_finish = GRect(digit_x(shown_time, DIGITS[i].index), NORMAL_Y, DIGIT_WIDTH, DIGIT_HEIGHT);
+    animate_digit_layer(layer, &digit_start, &digit_finish, 800, DIGITS[i].arrive_delay);
+  }
+  already_left_minute = -1;
+  schedule_leave_timer();
 }
 
 void tick_handler(struct tm *tick_time, TimeUnits units_changed) {
@@ -370,6 +411,9 @@ void handle_init(void) {
 void handle_deinit(void) {
   if (leave_timer != NULL) {
     app_timer_cancel(leave_timer);
+  }
+  if (return_timer != NULL) {
+    app_timer_cancel(return_timer);
   }
   window_destroy(my_window);
   tick_timer_service_unsubscribe();

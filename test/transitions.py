@@ -318,6 +318,7 @@ def cases(kind):
                 ("none_to_ones", "20:20:05", "20:20:08", "11:11:05"),
                 ("noon_to_one", "12:59:05", "12:59:08", "13:00:05"),
                 ("during_leave", "10:59:53", "10:59:58.8", "10:30:05"),
+                ("back_during_leave", "10:59:53", "10:59:59", "10:59:20"),
                 ("during_arrive", "10:59:53", "11:00:00.3", "21:10:05")):
             jump_to = datetime.datetime.combine(datetime.date.today(), datetime.datetime.strptime(to_s, "%H:%M:%S").time())
             launch_at = datetime.datetime.combine(datetime.date.today(), datetime.datetime.strptime(launch_s, "%H:%M:%S").time())
