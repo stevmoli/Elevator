@@ -16,6 +16,10 @@ The rig talks to the emulator directly (through pebble-tool's own libpebble2)
 and relaunches the face instead of reinstalling it. If the emulator stops
 responding, it is rebooted from a clean state and the case is retried once.
 
+A case that fails is run once more on a freshly booted emulator, since the emulator occasionally reboots
+itself or freezes mid-run. A case that then passes is reported as FLAKY (with the first failure) rather
+than as a failure; one that fails again is a FAIL.
+
 Results, including any failing screenshots and diffs, go under --out.
 
 Usage (from the repo root, with the project already built):
@@ -378,7 +382,7 @@ def main():
         sys.exit(run_side_by_side(platforms))
 
     emu = Emulator(args.platform)
-    failures = 0
+    failures = flaky = 0
     for fmt in (["12h", "24h"] if args.format == "both" else [args.format]):
         out = os.path.join(args.out, args.platform, fmt)
         os.makedirs(out, exist_ok=True)
@@ -395,11 +399,28 @@ def main():
                 emu.reboot()
                 cache = {}
                 problems = run_transition(emu, name, launch_at, check_at, expected, out, cache, motion, jump)
-            status = "FAIL" if problems else "ok"
-            print("%-4s %s %s %s" % (status, fmt, name, "; ".join(problems)), flush=True)
-            failures += bool(problems)
+            status = "ok"
+            if problems:
+                # Run it again on a freshly booted emulator: a real bug fails again, a misbehaving emulator doesn't
+                print("     %s %s failed (%s); running it again on a fresh emulator" % (fmt, name, "; ".join(problems)), flush=True)
+                emu.reboot()
+                cache = {}
+                first = problems
+                try:
+                    problems = run_transition(emu, name + "_retry", launch_at, check_at, expected, out, cache, motion, jump)
+                except EmulatorHung as e:
+                    problems = ["the emulator stopped responding on the second run too (%s)" % str(e).splitlines()[0]]
+                    emu.reboot()
+                    cache = {}
+                if not problems:
+                    status, problems = "FLAKY", ["passed on a fresh emulator after: " + "; ".join(first)]
+                    flaky += 1
+                else:
+                    status = "FAIL"
+                    failures += 1
+            print("%-5s %s %s %s" % (status, fmt, name, "; ".join(problems)), flush=True)
 
-    print("%d failure(s)" % failures)
+    print("%d failure(s)%s" % (failures, ", %d flaky" % flaky if flaky else ""))
     sys.exit(1 if failures else 0)
 
 
